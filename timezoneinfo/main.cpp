@@ -71,7 +71,7 @@ int main ( ) {
                                                ->FirstChildElement ( "mapTimezones" )
                                                ->FirstChildElement ( "mapZone" );
 
-    tinyxml2::XMLElement const * const last = element->Parent ( )->LastChildElement ( "mapZone" );
+    tinyxml2::XMLElement const * const last_element = element->Parent ( )->LastChildElement ( "mapZone" );
 
     struct Info {
         std::string iana, code;
@@ -90,7 +90,7 @@ int main ( ) {
             db.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
         }
 
-        if ( element == last )
+        if ( element == last_element )
             break;
         else
             element = element->NextSiblingElement ( );
