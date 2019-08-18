@@ -71,10 +71,7 @@ int main ( ) {
                                                ->FirstChildElement ( "mapTimezones" )
                                                ->FirstChildElement ( "mapZone" );
 
-    tinyxml2::XMLElement const * const last = doc.FirstChildElement ( "supplementalData" )
-                                                  ->FirstChildElement ( "windowsZones" )
-                                                  ->FirstChildElement ( "mapTimezones" )
-                                                  ->LastChildElement ( "mapZone" );
+    tinyxml2::XMLElement const * const last = element->Parent ( )->LastChildElement ( "mapZone" );
 
     struct Info {
         std::string iana, code;
@@ -88,7 +85,7 @@ int main ( ) {
         auto const territory_view = elementToStringView ( element, "territory" );
 
         for ( auto & ia : sax::string_split ( elementToStringView ( element, "type" ), " " ) ) {
-            if ( "Etc/" == ia.substr ( 0u, 4u ) )
+            if ( "Etc" == ia.substr ( 0u, 3u ) )
                 ia = ia.substr ( 4u, ia.size ( ) - 4 );
             db.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
         }
