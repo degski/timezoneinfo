@@ -54,12 +54,6 @@
 
 namespace fs = std::filesystem;
 
-std::string elementToString ( tinyxml2::XMLElement const * element_, char const name_[] ) {
-    char const * out;
-    element_->QueryStringAttribute ( name_, &out );
-    return { out };
-}
-
 std::string_view elementToStringView ( tinyxml2::XMLElement const * element_, char const name_[] ) {
     char const * out;
     element_->QueryStringAttribute ( name_, &out );
