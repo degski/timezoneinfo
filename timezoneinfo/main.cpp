@@ -90,10 +90,10 @@ int main ( ) {
             db.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
         }
 
-        if ( element == last_element )
-            break;
-        else
+        if ( element != last_element )
             element = element->NextSiblingElement ( );
+        else
+            break;
     }
 
     std::cout << db.size ( ) << nl;
