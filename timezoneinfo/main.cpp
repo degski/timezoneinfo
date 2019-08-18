@@ -87,8 +87,11 @@ int main ( ) {
         auto const other_view     = elementToStringView ( element, "other" );
         auto const territory_view = elementToStringView ( element, "territory" );
 
-        for ( auto const & ia : sax::string_split ( elementToStringView ( element, "type" ), " " ) )
+        for ( auto & ia : sax::string_split ( elementToStringView ( element, "type" ), " " ) ) {
+            if ( "Etc/" == ia.substr ( 0u, 4u ) )
+                ia = ia.substr ( 4u, ia.size ( ) - 4 );
             db.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
+        }
 
         if ( element == last )
             break;
