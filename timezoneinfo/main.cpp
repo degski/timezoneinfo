@@ -90,11 +90,10 @@ int main ( ) {
 
     while ( true ) {
 
-        auto const iana_view_vector = sax::string_split ( elementToStringView ( element, "type" ), " " );
-        auto const other_view       = elementToStringView ( element, "other" );
-        auto const territory_view   = elementToStringView ( element, "territory" );
+        auto const other_view     = elementToStringView ( element, "other" );
+        auto const territory_view = elementToStringView ( element, "territory" );
 
-        for ( auto const & ia : iana_view_vector )
+        for ( auto const & ia : sax::string_split ( elementToStringView ( element, "type" ), " " ) )
             db.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
 
         if ( element == last )
