@@ -44,6 +44,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <fmt/core.h>
+
 #include <tinyxml2.h>
 
 #include "timezoneinfo.hpp"
@@ -51,8 +53,10 @@
 #if _WIN32
 #    if defined( _DEBUG )
 #        pragma comment( lib, "tinyxml2d.lib" )
+#        pragma comment( lib, "fmtd.lib" )
 #    else
 #        pragma comment( lib, "tinyxml2.lib" )
+#        pragma comment( lib, "fmt.lib" )
 #    endif
 #endif
 
@@ -103,28 +107,6 @@ std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ 
     return map;
 }
 
-// "Y:/REPOS/timezoneinfo/windowsZones.xml"
-
-int main ( ) {
-
-    std::map<std::string, Info> map{ buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" ) };
-
-    std::cout << map.size ( ) << nl;
-
-    for ( auto const & e : map ) {
-        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
-    }
-
-    return EXIT_SUCCESS;
-}
-
-typedef struct _REG_TZI_FORMAT {
-    LONG Bias;
-    LONG StandardBias;
-    LONG DaylightBias;
-    SYSTEMTIME StandardDate;
-    SYSTEMTIME DaylightDate;
-} REG_TZI_FORMAT;
 /*
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     LONG Bias;
@@ -138,65 +120,92 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     BOOLEAN DynamicDaylightTimeDisabled;
 } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
 */
-// https://stackoverflow.com/a/14184787/646940
 
-std::wstring widen1 ( std::string const & in_ ) {
-    // Calculate target buffer size (not including the zero terminator).
-    int len = MultiByteToWideChar ( CP_UTF8, MB_ERR_INVALID_CHARS, in_.c_str ( ), ( int ) in_.size ( ), nullptr, 0 );
-    if ( len == 0 )
-        throw std::runtime_error ( "Invalid character sequence." );
-    std::wstring out ( len, 0 );
-    // No error checking. We already know, that the conversion will succeed.
-    MultiByteToWideChar ( CP_UTF8, MB_ERR_INVALID_CHARS, in_.c_str ( ), ( int ) in_.size ( ), out.data ( ), ( int ) out.size ( ) );
-    return out;
+/*
+
+typedef struct _SYSTEMTIME {
+
+    WORD wYear;
+    WORD wMonth;
+    WORD wDayOfWeek;
+    WORD wDay;
+    WORD wHour;
+    WORD wMinute;
+    WORD wSecond;
+    WORD wMilliseconds;
+
+} SYSTEMTIME, *PSYSTEMTIME;
+
+*/
+
+template<typename Stream>
+[[maybe_unused]] Stream & operator<< ( Stream & os_, SYSTEMTIME const & st_ ) {
+    os_ << fmt::format ( "{:04}:{:02}:{:02} {:02}:{:02}:{:02}", st_.wYear, st_.wMonth, st_.wDay, st_.wHour, st_.wMinute,
+                         st_.wSecond );
+    return os_;
 }
 
-std::wstring widen2 ( _In_ std::string const & ansi_ ) {
-    constexpr std::string::size_type limit = std::numeric_limits<int>::max ( );
-    assert ( ansi_.size ( ) < limit );
-    int const ansi_byte_size  = static_cast<int> ( ansi_.size ( ) );
-    auto const wide_char_size = ::MultiByteToWideChar ( CP_UTF8, MB_PRECOMPOSED, ansi_.c_str ( ), ansi_byte_size, nullptr, 0 );
-    std::wstring wide_string ( wide_char_size, L'\0' );
-    auto const final_char_size =
-        ::MultiByteToWideChar ( CP_UTF8, MB_PRECOMPOSED, ansi_.c_str ( ), ansi_byte_size, wide_string.data ( ), wide_char_size );
-    assert ( final_char_size == wide_char_size );
-    return wide_string;
-}
-
-TIME_ZONE_INFORMATION initTZI ( std::string const & desc_ ) {
-
+TIME_ZONE_INFORMATION get_tzi ( std::string const & desc_ ) {
+    // The registry entry for TZI.
+    struct REG_TZI_FORMAT {
+        LONG Bias;
+        LONG StandardBias;
+        LONG DaylightBias;
+        SYSTEMTIME StandardDate;
+        SYSTEMTIME DaylightDate;
+    };
+    // Variables.
     HKEY hKey = nullptr;
     DWORD dwDataLen;
-    REG_TZI_FORMAT LOCAL_TZI{};
-    TIME_ZONE_INFORMATION TZI{};
+    REG_TZI_FORMAT reg_tzi_format{};
+    TIME_ZONE_INFORMATION tzi{};
+    // Create URI.
+    std::wstring const desc = sax::utf8_to_utf16 ( desc_ );
+    std::wstring const uri  = std::wstring ( L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc;
 
-#if defined _UNICODE
-    auto uri = TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + widen2 ( desc_ );
-#else
-    auto uri = TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc_;
-#endif
-
-    RegOpenKeyEx ( HKEY_LOCAL_MACHINE, TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ), 0, KEY_ALL_ACCESS,
-                   &hKey );
-
-    dwDataLen = sizeof ( TZI.DaylightName );
-    RegQueryValueEx ( hKey, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) TZI.DaylightName, &dwDataLen );
-
-    dwDataLen = sizeof ( TZI.StandardName );
-    RegQueryValueEx ( hKey, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) TZI.StandardName, &dwDataLen );
+    RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_ALL_ACCESS, &hKey );
 
     dwDataLen = sizeof ( REG_TZI_FORMAT );
-    RegQueryValueEx ( hKey, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &LOCAL_TZI, &dwDataLen );
+    RegQueryValueEx ( hKey, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi_format, &dwDataLen );
 
-    TZI.Bias = LOCAL_TZI.Bias;
+    tzi.Bias = reg_tzi_format.Bias; // UTC = local time + bias
 
-    TZI.DaylightBias = LOCAL_TZI.DaylightBias;
-    TZI.DaylightDate = LOCAL_TZI.DaylightDate;
+    dwDataLen = 64;
+    RegQueryValueEx ( hKey, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) &tzi.StandardName, &dwDataLen );
 
-    TZI.StandardBias = LOCAL_TZI.StandardBias;
-    TZI.StandardDate = LOCAL_TZI.StandardDate;
+    tzi.StandardDate = reg_tzi_format.StandardDate;
+    tzi.StandardBias = reg_tzi_format.StandardBias;
+
+    dwDataLen = 64;
+    RegQueryValueEx ( hKey, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &dwDataLen );
+
+    tzi.DaylightDate = reg_tzi_format.DaylightDate;
+    tzi.DaylightBias = reg_tzi_format.DaylightBias;
 
     RegCloseKey ( hKey );
 
-    return TZI;
+    return tzi;
+}
+
+int main ( ) {
+    /*
+    std::map<std::string, Info> map{ buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" ) };
+
+    std::cout << map.size ( ) << nl;
+
+    for ( auto const & e : map ) {
+        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
+    }
+    */
+    TIME_ZONE_INFORMATION tzi = get_tzi ( "GTB Standard Time" );
+
+    std::cout << tzi.Bias << nl;
+    std::cout << tzi.DaylightBias << nl;
+    std::cout << tzi.DaylightDate << nl;
+    std::wcout << tzi.DaylightName << nl;
+    std::cout << tzi.StandardBias << nl;
+    std::cout << tzi.StandardDate << nl;
+    std::wcout << tzi.StandardName << nl;
+
+    return EXIT_SUCCESS;
 }
