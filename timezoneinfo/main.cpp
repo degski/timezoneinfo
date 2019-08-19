@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include <Windows.h>
+
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -61,7 +63,7 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
 }
 
 struct Info {
-    std::string iana, code;
+    std::string name, code;
 };
 
 std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ ) {
@@ -74,12 +76,19 @@ std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ 
                                                ->FirstChildElement ( "mapZone" );
     tinyxml2::XMLElement const * const last_element = element->Parent ( )->LastChildElement ( "mapZone" );
     while ( true ) {
-        auto const other_view     = elementToCStr ( element, "other" );
-        auto const territory_view = elementToCStr ( element, "territory" );
-        for ( auto & ia : sax::string_split ( std::string_view{ elementToCStr ( element, "type" ) }, " " ) ) {
-            if ( "Etc" == ia.substr ( 0u, 3u ) )
-                ia = ia.substr ( 4u, ia.size ( ) - 4 );
-            map.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
+        auto const other     = elementToCStr ( element, "other" );
+        auto const territory = elementToCStr ( element, "territory" );
+        if ( "001" != territory ) {
+            for ( auto & ia : sax::string_split ( std::string_view{ elementToCStr ( element, "type" ) }, " " ) ) {
+                if ( "Etc" == ia.substr ( 0u, 3u ) )
+                    ia = ia.substr ( 4u, ia.size ( ) - 4 );
+                std::string ais{ ia };
+                auto it = map.find ( ais );
+                if ( std::end ( map ) == it )
+                    map.emplace ( std::move ( ais ), Info{ std::string{ other }, std::string{ territory } } );
+                else if ( "001" == it->second.code )
+                    it->second.code = std::string{ territory };
+            }
         }
         if ( element != last_element )
             element = element->NextSiblingElement ( );
@@ -89,7 +98,6 @@ std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ 
     return map;
 }
 
-
 // "Y:/REPOS/timezoneinfo/windowsZones.xml"
 
 int main ( ) {
@@ -98,5 +106,92 @@ int main ( ) {
 
     std::cout << map.size ( ) << nl;
 
+    for ( auto const & e : map ) {
+        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
+    }
+
     return EXIT_SUCCESS;
+}
+
+typedef struct _REG_TZI_FORMAT {
+    LONG Bias;
+    LONG StandardBias;
+    LONG DaylightBias;
+    SYSTEMTIME StandardDate;
+    SYSTEMTIME DaylightDate;
+} REG_TZI_FORMAT;
+/*
+typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
+    LONG Bias;
+    WCHAR StandardName[ 32 ];
+    SYSTEMTIME StandardDate;
+    LONG StandardBias;
+    WCHAR DaylightName[ 32 ];
+    SYSTEMTIME DaylightDate;
+    LONG DaylightBias;
+    WCHAR TimeZoneKeyName[ 128 ];
+    BOOLEAN DynamicDaylightTimeDisabled;
+} DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
+*/
+// https://stackoverflow.com/a/14184787/646940
+
+std::wstring widen1 ( std::string const & in_ ) {
+    // Calculate target buffer size (not including the zero terminator).
+    int len = MultiByteToWideChar ( CP_UTF8, MB_ERR_INVALID_CHARS, in_.c_str ( ), ( int ) in_.size ( ), nullptr, 0 );
+    if ( len == 0 )
+        throw std::runtime_error ( "Invalid character sequence." );
+    std::wstring out ( len, 0 );
+    // No error checking. We already know, that the conversion will succeed.
+    MultiByteToWideChar ( CP_UTF8, MB_ERR_INVALID_CHARS, in_.c_str ( ), ( int ) in_.size ( ), out.data ( ), ( int ) out.size ( ) );
+    return out;
+}
+
+std::wstring widen2 ( _In_ std::string const & ansi_ ) {
+    constexpr std::string::size_type limit = std::numeric_limits<int>::max ( );
+    assert ( ansi_.size ( ) < limit );
+    int const ansi_byte_size  = static_cast<int> ( ansi_.size ( ) );
+    auto const wide_char_size = ::MultiByteToWideChar ( CP_UTF8, MB_PRECOMPOSED, ansi_.c_str ( ), ansi_byte_size, nullptr, 0 );
+    std::wstring wide_string ( wide_char_size, L'\0' );
+    auto const final_char_size =
+        ::MultiByteToWideChar ( CP_UTF8, MB_PRECOMPOSED, ansi_.c_str ( ), ansi_byte_size, wide_string.data ( ), wide_char_size );
+    assert ( final_char_size == wide_char_size );
+    return wide_string;
+}
+
+TIME_ZONE_INFORMATION initTZI ( std::string const & desc_ ) {
+
+    HKEY hKey = nullptr;
+    DWORD dwDataLen;
+    REG_TZI_FORMAT LOCAL_TZI{};
+    TIME_ZONE_INFORMATION TZI{};
+
+#if defined _UNICODE
+    auto uri = TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + widen2 ( desc_ );
+#else
+    auto uri = TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc_;
+#endif
+
+    RegOpenKeyEx ( HKEY_LOCAL_MACHINE, TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ), 0, KEY_ALL_ACCESS,
+                   &hKey );
+
+    dwDataLen = sizeof ( TZI.DaylightName );
+    RegQueryValueEx ( hKey, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) TZI.DaylightName, &dwDataLen );
+
+    dwDataLen = sizeof ( TZI.StandardName );
+    RegQueryValueEx ( hKey, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) TZI.StandardName, &dwDataLen );
+
+    dwDataLen = sizeof ( REG_TZI_FORMAT );
+    RegQueryValueEx ( hKey, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &LOCAL_TZI, &dwDataLen );
+
+    TZI.Bias = LOCAL_TZI.Bias;
+
+    TZI.DaylightBias = LOCAL_TZI.DaylightBias;
+    TZI.DaylightDate = LOCAL_TZI.DaylightDate;
+
+    TZI.StandardBias = LOCAL_TZI.StandardBias;
+    TZI.StandardDate = LOCAL_TZI.StandardDate;
+
+    RegCloseKey ( hKey );
+
+    return TZI;
 }
