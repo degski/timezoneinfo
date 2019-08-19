@@ -1,4 +1,4 @@
-
+﻿
 // MIT License
 //
 // Copyright (c) 2019 degski
@@ -36,7 +36,9 @@
 #include <map>
 #include <random>
 #include <sax/iostream.hpp>
+#include <sax/stl.hpp>
 #include <sax/string_split.hpp>
+#include <sax/utf8conv.hpp>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -65,6 +67,9 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
 struct Info {
     std::string name, code;
 };
+
+using KeyValue = sax::pair<std::string, Info>;
+using Map      = std::vector<KeyValue>;
 
 std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ ) {
     std::map<std::string, Info> map;
