@@ -340,7 +340,7 @@ int fifth_weekday_day ( int const y, int const m, int const w ) noexcept {
 [[nodiscard]] int number_of_days_since ( int const y, int const m, int const d ) noexcept {
     std::time_t now;
     if ( std::time ( &now ) != ( std::time_t ) -1 ) {
-        std::tm date     = { 0 };
+        std::tm date{};
         date.tm_year     = y - 1'900;
         date.tm_mon      = m - 1;
         date.tm_mday     = d;
@@ -368,11 +368,6 @@ int fifth_weekday_day ( int const y, int const m, int const w ) noexcept {
     return tmp;
 }
 
-void convert_PSYSTEMTIME_ptm ( SYSTEMTIME const * in, std::tm * out ) noexcept {
-    std::tm tmp = convert_PSYSTEMTIME_tm ( in );
-    std::memcpy ( out, &tmp, sizeof ( std::tm ) );
-}
-
 [[nodiscard]] SYSTEMTIME convert_ptm_SYSTEMTIME ( const std::tm * in ) noexcept {
     SYSTEMTIME tmp{};
     tmp.wYear      = in->tm_year + 1'900;
@@ -384,9 +379,4 @@ void convert_PSYSTEMTIME_ptm ( SYSTEMTIME const * in, std::tm * out ) noexcept {
     tmp.wSecond    = in->tm_sec;
     // tmp.wMilliseconds = 0;
     return tmp;
-}
-
-void convert_ptm_PSYSTEMTIME ( const std::tm * in, SYSTEMTIME * out ) noexcept {
-    SYSTEMTIME tmp = convert_ptm_SYSTEMTIME ( in );
-    std::memcpy ( out, &tmp, sizeof ( SYSTEMTIME ) );
 }
