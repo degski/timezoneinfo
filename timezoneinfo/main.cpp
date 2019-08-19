@@ -54,49 +54,49 @@
 
 namespace fs = std::filesystem;
 
-std::string_view elementToStringView ( tinyxml2::XMLElement const * element_, char const name_[] ) {
+char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char const name_[] ) noexcept {
     char const * out;
     element_->QueryStringAttribute ( name_, &out );
-    return { out };
+    return out;
 }
 
-int main ( ) {
+struct Info {
+    std::string iana, code;
+};
 
+std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ ) {
+    std::map<std::string, Info> map;
     tinyxml2::XMLDocument doc;
-
-    doc.LoadFile ( "Y:/REPOS/timezoneinfo/windowsZones.xml" );
-
+    doc.LoadFile ( path_.string ( ).c_str ( ) );
     tinyxml2::XMLElement const * element = doc.FirstChildElement ( "supplementalData" )
                                                ->FirstChildElement ( "windowsZones" )
                                                ->FirstChildElement ( "mapTimezones" )
                                                ->FirstChildElement ( "mapZone" );
-
     tinyxml2::XMLElement const * const last_element = element->Parent ( )->LastChildElement ( "mapZone" );
-
-    struct Info {
-        std::string iana, code;
-    };
-
-    std::map<std::string, Info> db;
-
     while ( true ) {
-
-        auto const other_view     = elementToStringView ( element, "other" );
-        auto const territory_view = elementToStringView ( element, "territory" );
-
-        for ( auto & ia : sax::string_split ( elementToStringView ( element, "type" ), " " ) ) {
+        auto const other_view     = elementToCStr ( element, "other" );
+        auto const territory_view = elementToCStr ( element, "territory" );
+        for ( auto & ia : sax::string_split ( std::string_view{ elementToCStr ( element, "type" ) }, " " ) ) {
             if ( "Etc" == ia.substr ( 0u, 3u ) )
                 ia = ia.substr ( 4u, ia.size ( ) - 4 );
-            db.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
+            map.emplace ( std::string{ ia }, Info{ std::string{ other_view }, std::string{ territory_view } } );
         }
-
         if ( element != last_element )
             element = element->NextSiblingElement ( );
         else
             break;
     }
+    return map;
+}
 
-    std::cout << db.size ( ) << nl;
+
+// "Y:/REPOS/timezoneinfo/windowsZones.xml"
+
+int main ( ) {
+
+    std::map<std::string, Info> map{ buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" ) };
+
+    std::cout << map.size ( ) << nl;
 
     return EXIT_SUCCESS;
 }
