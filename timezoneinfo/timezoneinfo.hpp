@@ -24,3 +24,7 @@
 #pragma once
 
 #include <string>
+
+[[nodiscard]] int first_weekday_day ( int const y, int const m, int const w ) noexcept;
+[[nodiscard]] int second_weekday_day ( int const y, int const m, int const w ) noexcept;
+[[nodiscard]] int last_weekday_day ( int const y, int const m, int const w ) noexcept;

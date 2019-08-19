@@ -75,7 +75,7 @@ struct Info {
 using KeyValue = sax::pair<std::string, Info>;
 using Map      = std::vector<KeyValue>;
 
-std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ ) {
+[[nodiscard]] std::map<std::string, Info> buildIanaToWindowsZonesMap ( fs::path const & path_ ) {
     std::map<std::string, Info> map;
     tinyxml2::XMLDocument doc;
     doc.LoadFile ( path_.string ( ).c_str ( ) );
@@ -140,12 +140,12 @@ typedef struct _SYSTEMTIME {
 
 template<typename Stream>
 [[maybe_unused]] Stream & operator<< ( Stream & os_, SYSTEMTIME const & st_ ) {
-    os_ << fmt::format ( "{:04}:{:02}:{:02} {:02}:{:02}:{:02}", st_.wYear, st_.wMonth, st_.wDay, st_.wHour, st_.wMinute,
-                         st_.wSecond );
+    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", st_.wYear, st_.wMonth, st_.wDayOfWeek, st_.wDay, st_.wHour,
+                         st_.wMinute );
     return os_;
 }
 
-TIME_ZONE_INFORMATION get_tzi ( std::string const & desc_ ) {
+[[nodiscard]] TIME_ZONE_INFORMATION get_tzi ( std::string const & desc_ ) {
     // The registry entry for TZI.
     struct REG_TZI_FORMAT {
         LONG Bias;
@@ -197,7 +197,7 @@ int main ( ) {
         std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
     }
     */
-    TIME_ZONE_INFORMATION tzi = get_tzi ( "GTB Standard Time" );
+    TIME_ZONE_INFORMATION tzi = get_tzi ( "Central Brazilian Standard Time" );
 
     std::cout << tzi.Bias << nl;
     std::cout << tzi.DaylightBias << nl;
@@ -208,4 +208,185 @@ int main ( ) {
     std::wcout << tzi.StandardName << nl;
 
     return EXIT_SUCCESS;
+}
+
+constexpr char const * dow[ 7 ]             = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+constexpr char const * day_of_the_week[ 7 ] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saterday" };
+constexpr char const * moy[ 12 ] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+constexpr char const * month_of_the_year[ 12 ] = { "January", "February", "March",     "April",   "May",      "June",
+                                                   "July",    "August",   "September", "October", "November", "December" };
+[[nodiscard]] int today_year ( ) noexcept {
+    std::time_t now;
+    std::time ( &now );
+    std::tm * date = std::gmtime ( &now );
+    return date->tm_year + 1'900;
+}
+
+[[nodiscard]] bool is_leap_year ( int const y ) noexcept { return ( ( y % 4 == 0 ) and ( y % 100 != 0 ) ) or ( y % 400 == 0 ); }
+
+[[nodiscard]] int number_of_days_month ( int const y, int const m ) noexcept {
+    //  This function returns the number of days for the given m (month) in the given y (year)
+    return ( 30 + ( ( ( m & 9 ) == 8 ) or ( ( m & 9 ) == 1 ) ) - ( m == 2 ) -
+             ( !( ( ( y % 4 ) == 0 ) and ( ( ( y % 100 ) != 0 ) or ( ( y % 400 ) == 0 ) ) ) and ( m == 2 ) ) );
+}
+
+[[nodiscard]] int number_of_days_ytd ( int const y, int const m, int const d ) noexcept { // normal counting
+    if ( d > number_of_days_month ( y, m ) )
+        return -1;
+    constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    return cum_dim[ m - 1 ] + d + ( ( m > 2L ) * ( ( ( y % 4 == 0 ) and ( y % 100 != 0 ) ) or ( y % 400 == 0 ) ) );
+}
+
+[[nodiscard]] int number_of_weeks_ytd ( int const y, int const m, int const d ) noexcept { // normal counting
+    if ( d > number_of_days_month ( y, m ) )
+        return -1;
+    constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    return ( ( ( cum_dim[ m - 1 ] + d + ( ( m > 2L ) * ( ( ( y % 4 == 0 ) and ( y % 100 != 0 ) ) or ( y % 400 == 0 ) ) ) ) -
+               first_weekday_day ( y, 1, 0 ) ) /
+             7 ) +
+           1;
+}
+
+[[nodiscard]] int weekday ( int y, int m, int d ) noexcept {
+    // calendar_system = 1 for Gregorian Calendar, 0 for Julian Calendar
+    int const calendar_system = 1;
+    if ( m < 3 ) {
+        m += 12;
+        y -= 1;
+    }
+    return ( d + ( m << 1 ) + ( 6 * ( m + 1 ) / 10 ) + y + ( y >> 2 ) - ( y / 100 ) + ( y / 400 ) + calendar_system ) % 7;
+}
+
+[[nodiscard]] int first_weekday_month ( int y, int m ) noexcept { return weekday ( y, m, 1 ); }
+
+[[nodiscard]] int first_weekday_next_month ( int y, int m ) noexcept {
+    return ( ( m != 12 ) ? weekday ( y, ++m, 1 ) : weekday ( ++y, 1, 1 ) );
+}
+
+[[nodiscard]] int last_weekday_month ( int y, int m ) noexcept {
+    return ( ( m != 12 ) ? ( ( weekday ( y, ++m, 1 ) + 6 ) % 7 ) : ( ( weekday ( ++y, 1, 1 ) + 6 ) % 7 ) );
+}
+
+[[nodiscard]] std::time_t time_last_weekday_month ( int const y, int const m, int const w ) noexcept {
+    std::tm date{};
+    date.tm_year = y - 1'900; // two digit y!
+    date.tm_mon  = m - 1;
+    date.tm_mday = last_weekday_day ( y, m, w );
+    return std::mktime ( &date );
+}
+
+void get_utc ( std::tm * ptm ) noexcept {
+    std::time_t rawtime;
+    std::time ( &rawtime );
+    ptm = std::gmtime ( &rawtime );
+}
+
+[[nodiscard]] bool is_workweek ( int const y, int const m, int const d ) noexcept {
+    int const dow = weekday ( y, m, d );
+    return not( dow == 0 or dow == 6 );
+}
+
+[[nodiscard]] bool is_weekend ( int const y, int const m, int const d ) noexcept { return not is_workweek ( y, m, d ); }
+
+[[nodiscard]] int today_weekday ( ) noexcept {
+    std::time_t now;
+    std::time ( &now );
+    std::tm date;
+    localtime_s ( &date, &now );
+    return date.tm_wday;
+}
+
+[[nodiscard]] bool is_today_workweek ( ) noexcept {
+    int const dow = today_weekday ( );
+    return not( dow == 0 or dow == 6 );
+}
+
+void print_date_time_t ( std::time_t rawtime ) noexcept {
+    std::tm * ptm = std::gmtime ( &rawtime );
+    std::printf ( "%02i:%02i:%02i, %s %02i.%02i.%4i", ptm->tm_hour, ptm->tm_min, ptm->tm_sec, dow[ ptm->tm_wday ], ptm->tm_mday,
+                  ptm->tm_mon + 1, ptm->tm_year + 1'900 );
+}
+
+[[nodiscard]] int first_weekday_day ( int const y, int const m, int const w ) noexcept {
+    return 1 + ( ( 7 - first_weekday_month ( y, m ) + w ) % 7 );
+}
+
+[[nodiscard]] int second_weekday_day ( int const y, int const m, int const w ) noexcept {
+    return first_weekday_day ( y, m, w ) + 7;
+}
+
+[[nodiscard]] int third_weekday_day ( int const y, int const m, int const w ) noexcept {
+    return first_weekday_day ( y, m, w ) + 14;
+}
+
+[[nodiscard]] int fourth_weekday_day ( int const y, int const m, int const w ) noexcept {
+    return first_weekday_day ( y, m, w ) + 21;
+}
+
+int fifth_weekday_day ( int const y, int const m, int const w ) noexcept {
+    int r = first_weekday_day ( y, m, w ) + 28;
+    if ( r <= number_of_days_month ( y, m ) )
+        return r;
+    return -1;
+}
+
+[[nodiscard]] int last_weekday_day ( int const y, int const m, int const w ) noexcept {
+    int r = first_weekday_day ( y, m, w ) + 28;
+    if ( r <= number_of_days_month ( y, m ) )
+        return r;
+    return r - 7;
+}
+
+[[nodiscard]] int number_of_days_since ( int const y, int const m, int const d ) noexcept {
+    std::time_t now;
+    if ( std::time ( &now ) != ( std::time_t ) -1 ) {
+        std::tm date     = { 0 };
+        date.tm_year     = y - 1'900;
+        date.tm_mon      = m - 1;
+        date.tm_mday     = d;
+        std::time_t then = std::mktime ( &date );
+        if ( then != ( std::time_t ) ( -1 ) )
+            return ( int ) ( std::difftime ( now, then ) / ( 24 * 60 * 60 ) );
+    }
+    return 0;
+}
+
+[[nodiscard]] std::tm convert_PSYSTEMTIME_tm ( SYSTEMTIME const * in ) noexcept {
+    std::tm tmp{};
+    tmp.tm_sec              = in->wSecond;
+    tmp.tm_min              = in->wMinute;
+    tmp.tm_hour             = in->wHour;
+    tmp.tm_mday             = in->wDay;
+    tmp.tm_mon              = in->wMonth - 1;
+    int const y             = in->wYear;
+    tmp.tm_year             = y - 1900;
+    tmp.tm_wday             = in->wDayOfWeek;
+    int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    tmp.tm_yday             = cum_dim[ tmp.tm_mon ] + tmp.tm_mday +
+                  ( ( tmp.tm_mon > 1 ) * ( ( ( y % 4 == 0 ) and ( y % 100 != 0 ) ) or ( y % 400 == 0 ) ) );
+    // tmp.tm_isdst = 0;
+    return tmp;
+}
+
+void convert_PSYSTEMTIME_ptm ( SYSTEMTIME const * in, std::tm * out ) noexcept {
+    std::tm tmp = convert_PSYSTEMTIME_tm ( in );
+    std::memcpy ( out, &tmp, sizeof ( std::tm ) );
+}
+
+[[nodiscard]] SYSTEMTIME convert_ptm_SYSTEMTIME ( const std::tm * in ) noexcept {
+    SYSTEMTIME tmp{};
+    tmp.wYear      = in->tm_year + 1'900;
+    tmp.wMonth     = in->tm_mon + 1;
+    tmp.wDayOfWeek = in->tm_wday;
+    tmp.wDay       = in->tm_mday;
+    tmp.wHour      = in->tm_hour;
+    tmp.wMinute    = in->tm_min;
+    tmp.wSecond    = in->tm_sec;
+    // tmp.wMilliseconds = 0;
+    return tmp;
+}
+
+void convert_ptm_PSYSTEMTIME ( const std::tm * in, SYSTEMTIME * out ) noexcept {
+    SYSTEMTIME tmp = convert_ptm_SYSTEMTIME ( in );
+    std::memcpy ( out, &tmp, sizeof ( SYSTEMTIME ) );
 }
