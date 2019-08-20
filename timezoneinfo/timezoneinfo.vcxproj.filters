@@ -23,7 +23,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="timezoneinfo.hpp">
+    <ClInclude Include="..\include\calendar.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\timezoneinfo.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -31,25 +31,28 @@
 #include <fmt/core.h>
 
 inline constexpr char const * dow[ 7 ]             = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-inline constexpr char const * day_of_the_week[ 7 ] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saterday" };
+inline constexpr char const * day_of_the_week[ 7 ] = {
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saterday"
+};
 inline constexpr char const * moy[ 12 ] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February", "March",     "April",   "May",      "June",
-                                                   "July",    "August",   "September", "October", "November", "December" };
+                                                          "July",    "August",   "September", "October", "November", "December" };
+
 [[nodiscard]] int today_year ( ) noexcept;
 [[nodiscard]] bool is_leap_year ( int const y_ ) noexcept;
 [[nodiscard]] int number_of_days_month ( int const y_, int const m_ ) noexcept;
 [[nodiscard]] int number_of_days_ytd ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] int weekday ( int y_, int m_, int d_ ) noexcept;
-[[nodiscard]] int first_weekday_month ( int y_, int m_ ) noexcept;
+[[nodiscard]] int first_weekday_month ( int const y_, int const m_ ) noexcept;
 [[nodiscard]] int last_weekday_month ( int y_, int m_ ) noexcept;
 [[nodiscard]] std::time_t time_last_weekday_month ( int const y_, int const m_, int const w_ ) noexcept;
-void get_utc ( std::tm * ptm ) noexcept;
+void set_tm_utc ( std::tm * tm_ ) noexcept;
 [[nodiscard]] bool is_workweek ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] int today_weekday ( ) noexcept;
 [[nodiscard]] bool is_today_workweek ( ) noexcept;
-void print_date_time_t ( std::time_t rawtime ) noexcept;
+void print_date_time_t ( std::time_t const rawtime ) noexcept;
 [[nodiscard]] int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int second_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int third_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
