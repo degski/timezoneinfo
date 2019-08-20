@@ -51,6 +51,7 @@ inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February",
 
 [[nodiscard]] int today_year ( ) noexcept;
 [[nodiscard]] bool is_leap_year ( int const y_ ) noexcept;
+// Returns the number of days for the given m_ (month) in_ the given y_ (year).
 [[nodiscard]] int number_of_days_month ( int const y_, int const m_ ) noexcept;
 [[nodiscard]] int number_of_days_ytd ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept;
@@ -64,11 +65,8 @@ void set_tm_utc ( std::tm * tm_ ) noexcept;
 [[nodiscard]] int today_weekday ( ) noexcept;
 [[nodiscard]] bool is_today_workweek ( ) noexcept;
 void print_date_time_t ( std::time_t const rawtime ) noexcept;
-[[nodiscard]] int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-[[nodiscard]] int second_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-[[nodiscard]] int third_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-[[nodiscard]] int fourth_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-[[nodiscard]] int fifth_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
+// Get the month day for the n_-th (base 0) weekday w_.
+[[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int number_of_days_since ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] std::tm systemtime_to_tm ( SYSTEMTIME const & in_ ) noexcept;

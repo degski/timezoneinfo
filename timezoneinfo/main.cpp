@@ -218,7 +218,7 @@ typedef struct _SYSTEMTIME {
     std::tm date{};
     date.tm_year = today_year ( );
     date.tm_mon  = t.wMonth - 1;
-    date.tm_mday = first_weekday_day ( date.tm_year, t.wMonth, t.wDayOfWeek ) + ( t.wDay - 1 ) * 7;
+    date.tm_mday = weekday_day ( 0, date.tm_year, t.wMonth, t.wDayOfWeek ) + ( t.wDay - 1 ) * 7;
     if ( date.tm_mday > number_of_days_month ( t.wYear, t.wMonth ) )
         date.tm_mday -= 7;
     date.tm_year -= 1'900;
@@ -255,6 +255,9 @@ int main ( ) {
     std::cout << std::put_time ( &t1, "%c" ) << '\n';
     std::tm t2 = get_tzi_date ( tzi.DaylightDate );
     std::cout << std::put_time ( &t2, "%c" ) << '\n';
+
+    for ( int i = 1; i < 13; ++i )
+        std::cout << number_of_days_month ( 2020, i ) << nl;
 
     return EXIT_SUCCESS;
 }

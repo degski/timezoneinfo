@@ -68,25 +68,24 @@ typedef struct _SYSTEMTIME {
 
 [[nodiscard]] bool is_leap_year ( int const y_ ) noexcept { return ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ); }
 
+// Returns the number of days for the given m_ (month) in_ the given y_ (year).
 [[nodiscard]] int number_of_days_month ( int const y_, int const m_ ) noexcept {
-    //  This function returns the number of days for the given m_ (month) in_ the given y_ (year)
-    return ( 30 + ( ( ( m_ & 9 ) == 8 ) or ( ( m_ & 9 ) == 1 ) ) - ( m_ == 2 ) -
-             ( !( ( ( y_ % 4 ) == 0 ) and ( ( ( y_ % 100 ) != 0 ) or ( ( y_ % 400 ) == 0 ) ) ) and ( m_ == 2 ) ) );
+    return m_ != 2 ? 30 + ( ( m_ + ( m_ > 7 ) ) % 2 ) : 28 + is_leap_year ( y_ );
 }
 
-[[nodiscard]] int number_of_days_ytd ( int const y_, int const m_, int const d_ ) noexcept { // normal counting
+[[nodiscard]] int number_of_days_ytd ( int const y_, int const m_, int const d_ ) noexcept { // normal counting.
     if ( d_ > number_of_days_month ( y_, m_ ) )
         return -1;
-    constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    constexpr short const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
     return cum_dim[ m_ - 1 ] + d_ + ( ( m_ > 2 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) );
 }
 
-[[nodiscard]] int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept { // normal counting
+[[nodiscard]] int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept { // normal counting.
     if ( d_ > number_of_days_month ( y_, m_ ) )
         return -1;
-    constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    constexpr short const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
     return ( ( ( cum_dim[ m_ - 1 ] + d_ + ( ( m_ > 2 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) ) ) -
-               first_weekday_day ( y_, 1, 0 ) ) /
+               weekday_day ( 0, y_, 1, 0 ) ) /
              7 ) +
            1;
 }
@@ -148,34 +147,16 @@ void print_date_time_t ( std::time_t const rawtime ) noexcept {
 }
 
 [[nodiscard]] int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    return 1 + ( ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 );
+    return ( 1 + ( ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 ) );
 }
 
-[[nodiscard]] int second_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    return first_weekday_day ( y_, m_, w_ ) + 7;
+// Get the month day for the n_-th (base 0) weekday w_.
+[[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept {
+    int const day = 1 + ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 + n_ * 7;
+    return n_ < 5 ? day : ( day > number_of_days_month ( y_, m_ ) ? day - 7 : day );
 }
 
-[[nodiscard]] int third_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    return first_weekday_day ( y_, m_, w_ ) + 14;
-}
-
-[[nodiscard]] int fourth_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    return first_weekday_day ( y_, m_, w_ ) + 21;
-}
-
-[[nodiscard]] int fifth_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    int r = first_weekday_day ( y_, m_, w_ ) + 28;
-    if ( r <= number_of_days_month ( y_, m_ ) )
-        return r;
-    return r - 7;
-}
-
-[[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    int r = first_weekday_day ( y_, m_, w_ ) + 28;
-    if ( r <= number_of_days_month ( y_, m_ ) )
-        return r;
-    return r - 7;
-}
+[[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 5, y_, m_, w_ ); }
 
 [[nodiscard]] int number_of_days_since ( int const y_, int const m_, int const d_ ) noexcept {
     std::time_t now = std::time ( nullptr );
