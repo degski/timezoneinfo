@@ -256,8 +256,5 @@ int main ( ) {
     std::tm t2 = get_tzi_date ( tzi.DaylightDate );
     std::cout << std::put_time ( &t2, "%c" ) << '\n';
 
-    for ( int i = 1; i < 13; ++i )
-        std::cout << number_of_days_month ( 2020, i ) << nl;
-
     return EXIT_SUCCESS;
 }
