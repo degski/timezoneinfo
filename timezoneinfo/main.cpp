@@ -29,6 +29,7 @@
 #include <Windows.h>
 
 #include <array>
+#include <charconv>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -38,13 +39,13 @@
 #include <sax/iostream.hpp>
 #include <sax/stl.hpp>
 #include <sax/string_split.hpp>
-#include <sax/utf8conv.hpp>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <tinyxml2.h>
 
@@ -149,57 +150,111 @@ typedef struct _SYSTEMTIME {
         SYSTEMTIME DaylightDate;
     };
     // Variables.
-    HKEY hKey = nullptr;
-    DWORD dwDataLen;
+    HKEY key = nullptr;
+    DWORD data_length;
     REG_TZI_FORMAT reg_tzi_format{};
     TIME_ZONE_INFORMATION tzi{};
     // Create URI.
-    std::wstring const desc = sax::utf8_to_utf16 ( desc_ );
+    std::wstring const desc = fmt::to_wstring ( desc_ );
     std::wstring const uri  = std::wstring ( L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc;
 
-    RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_ALL_ACCESS, &hKey );
+    RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_READ, &key );
 
-    dwDataLen = sizeof ( REG_TZI_FORMAT );
-    RegQueryValueEx ( hKey, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi_format, &dwDataLen );
+    data_length = sizeof ( REG_TZI_FORMAT );
+    RegQueryValueEx ( key, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi_format, &data_length );
 
     tzi.Bias = reg_tzi_format.Bias; // UTC = local time + bias
 
-    dwDataLen = 64;
-    RegQueryValueEx ( hKey, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) &tzi.StandardName, &dwDataLen );
+    data_length = 64;
+    RegQueryValueEx ( key, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) &tzi.StandardName, &data_length );
 
     tzi.StandardDate = reg_tzi_format.StandardDate;
     tzi.StandardBias = reg_tzi_format.StandardBias;
 
-    dwDataLen = 64;
-    RegQueryValueEx ( hKey, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &dwDataLen );
+    data_length = 64;
+    RegQueryValueEx ( key, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &data_length );
 
     tzi.DaylightDate = reg_tzi_format.DaylightDate;
     tzi.DaylightBias = reg_tzi_format.DaylightBias;
 
-    RegCloseKey ( hKey );
+    RegCloseKey ( key );
+
+#if 0
+
+    std::wstring const uri_dynamic_dst = uri + std::wstring ( L"\\Dynamic DST" );
+
+    auto const exists = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri_dynamic_dst.c_str ( ), 0, KEY_READ, &key );
+
+    if ( ERROR_SUCCESS == exists ) {
+        DWORD const current_year = static_cast<DWORD> ( today_year ( ) );
+        DWORD first_year = 0u, last_year = 0u;
+
+        data_length = sizeof ( DWORD );
+        RegQueryValueEx ( key, TEXT ( "LastEntry" ), NULL, NULL, ( LPBYTE ) &last_year, &data_length );
+
+        if ( last_year >= current_year ) {
+            RegQueryValueEx ( key, TEXT ( "FirstEntry" ), NULL, NULL, ( LPBYTE ) &first_year, &data_length );
+
+            data_length = sizeof ( REG_TZI_FORMAT );
+            RegQueryValueEx ( key, fmt::to_wstring ( current_year ).c_str ( ), NULL, NULL, ( LPBYTE ) &reg_tzi_format,
+                              &data_length );
+
+            tzi.Bias         = reg_tzi_format.Bias; // UTC = local time + bias
+            tzi.StandardDate = reg_tzi_format.StandardDate;
+            tzi.StandardBias = reg_tzi_format.StandardBias;
+            tzi.DaylightDate = reg_tzi_format.DaylightDate;
+            tzi.DaylightBias = reg_tzi_format.DaylightBias;
+        }
+    }
+
+    RegCloseKey ( key );
+
+#endif
 
     return tzi;
 }
 
+[[nodiscard]] std::tm get_tzi_date ( SYSTEMTIME const & t ) noexcept {
+    std::tm date{};
+    date.tm_year = today_year ( );
+    date.tm_mon  = t.wMonth - 1;
+    date.tm_mday = first_weekday_day ( date.tm_year, t.wMonth, t.wDayOfWeek ) + ( t.wDay - 1 ) * 7;
+    if ( date.tm_mday > number_of_days_month ( t.wYear, t.wMonth ) )
+        date.tm_mday -= 7;
+    date.tm_year -= 1'900;
+    date.tm_hour = t.wHour;
+    date.tm_min  = t.wMinute;
+    date.tm_sec  = 0;
+    return date;
+}
+
 int main ( ) {
-    /*
+
+    // https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml
+
     std::map<std::string, Info> map{ buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" ) };
 
-    std::cout << map.size ( ) << nl;
+    // std::cout << map.size ( ) << nl;
 
-    for ( auto const & e : map ) {
-        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
-    }
-    */
-    TIME_ZONE_INFORMATION tzi = get_tzi ( "Central Brazilian Standard Time" );
+    // for ( auto const & e : map )
+    // std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
+
+    TIME_ZONE_INFORMATION tzi = get_tzi ( "W. Europe Standard Time" );
 
     std::cout << tzi.Bias << nl;
-    std::cout << tzi.DaylightBias << nl;
-    std::cout << tzi.DaylightDate << nl;
-    std::wcout << tzi.DaylightName << nl;
+
+    std::wcout << tzi.StandardName << nl;
     std::cout << tzi.StandardBias << nl;
     std::cout << tzi.StandardDate << nl;
-    std::wcout << tzi.StandardName << nl;
+
+    std::wcout << tzi.DaylightName << nl;
+    std::cout << tzi.DaylightBias << nl;
+    std::cout << tzi.DaylightDate << nl;
+
+    std::tm t1 = get_tzi_date ( tzi.StandardDate );
+    std::cout << std::put_time ( &t1, "%c" ) << '\n';
+    std::tm t2 = get_tzi_date ( tzi.DaylightDate );
+    std::cout << std::put_time ( &t2, "%c" ) << '\n';
 
     return EXIT_SUCCESS;
 }

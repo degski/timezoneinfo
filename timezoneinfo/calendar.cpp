@@ -21,12 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "calendar.hpp"
+
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
-
-#include "calendar.hpp"
 
 /*
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
@@ -166,7 +167,7 @@ void print_date_time_t ( std::time_t const rawtime ) noexcept {
     int r = first_weekday_day ( y_, m_, w_ ) + 28;
     if ( r <= number_of_days_month ( y_, m_ ) )
         return r;
-    return -1;
+    return r - 7;
 }
 
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
