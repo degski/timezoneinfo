@@ -30,6 +30,105 @@
 #include <cstdlib>
 
 /*
+    typedef struct _SYSTEMTIME {
+
+        WORD wYear;
+        WORD wMonth;
+        WORD wDayOfWeek;
+        WORD wDay;
+        WORD wHour;
+        WORD wMinute;
+        WORD wSecond;
+        WORD wMilliseconds;
+
+    } SYSTEMTIME, *PSYSTEMTIME;
+*/
+
+#define NS_SINCE_1970 116444736000000000ULL
+#define U_10M 10000000ULL
+#define S_10M 10000000LL
+
+nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept {
+    return ( wintime_.i > NS_SINCE_1970 ? wintime_.i - NS_SINCE_1970 : NS_SINCE_1970 - wintime_.i ) / U_10M;
+}
+
+wintime_t nixtime_to_wintime ( nixtime_t const nixtime_ ) noexcept {
+    wintime_t wt;
+    wt.i = static_cast<std::uint64_t> ( static_cast<std::int64_t> ( nixtime_ ) * S_10M ) + NS_SINCE_1970;
+    return wt;
+}
+
+wintime_t wintime ( ) noexcept {
+    wintime_t wt;
+    GetSystemTimeAsFileTime ( &wt.filetime );
+    return wt;
+}
+
+nixtime_t nixtime ( ) noexcept { return wintime_to_nixtime ( wintime ( ) ); }
+
+SYSTEMTIME wintime_to_systemtime ( wintime_t const wintime_ ) noexcept {
+    SYSTEMTIME st{};
+    FileTimeToSystemTime ( &wintime_.filetime, &st );
+    return st;
+}
+
+SYSTEMTIME nixtime_to_systemtime ( nixtime_t const nixtime_ ) noexcept {
+    return wintime_to_systemtime ( nixtime_to_wintime ( nixtime_ ) );
+}
+
+wintime_t systemtime_to_wintime ( SYSTEMTIME const & systemtime_ ) noexcept {
+    wintime_t wt;
+    SystemTimeToFileTime ( &systemtime_, &wt.filetime );
+    return wt;
+}
+
+nixtime_t systemtime_to_nixtime ( SYSTEMTIME const & systemtime_ ) noexcept {
+    return wintime_to_nixtime ( systemtime_to_wintime ( systemtime_ ) );
+}
+
+FILETIME wintime_to_filetime ( wintime_t const wintime_ ) noexcept { return wintime_.filetime; }
+FILETIME nixtime_to_filetime ( nixtime_t const nixtime_ ) noexcept { return nixtime_to_wintime ( nixtime_ ).filetime; }
+
+wintime_t filetime_to_wintime ( FILETIME const filetime_ ) noexcept { return { filetime_ }; }
+nixtime_t filetime_to_nixtime ( FILETIME const filetime_ ) noexcept {
+    return wintime_to_nixtime ( filetime_to_wintime ( filetime_ ) );
+}
+
+std::tm systemtime_to_tm ( SYSTEMTIME const & systemtime_ ) noexcept {
+    std::tm tmp{};
+    tmp.tm_sec                        = systemtime_.wSecond;
+    tmp.tm_min                        = systemtime_.wMinute;
+    tmp.tm_hour                       = systemtime_.wHour;
+    tmp.tm_mday                       = systemtime_.wDay;
+    tmp.tm_mon                        = systemtime_.wMonth - 1;
+    int const y_                      = systemtime_.wYear;
+    tmp.tm_year                       = y_ - 1900;
+    tmp.tm_wday                       = systemtime_.wDayOfWeek;
+    constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    tmp.tm_yday                       = cum_dim[ tmp.tm_mon ] + tmp.tm_mday +
+                  ( ( tmp.tm_mon > 1 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) );
+    tmp.tm_isdst = 0;
+    return tmp;
+}
+
+SYSTEMTIME tm_to_systemtime ( std::tm const & tm_ ) noexcept {
+    SYSTEMTIME tmp{};
+    tmp.wYear         = tm_.tm_year + 1'900;
+    tmp.wMonth        = tm_.tm_mon + 1;
+    tmp.wDayOfWeek    = tm_.tm_wday;
+    tmp.wDay          = tm_.tm_mday;
+    tmp.wHour         = tm_.tm_hour;
+    tmp.wMinute       = tm_.tm_min;
+    tmp.wSecond       = tm_.tm_sec;
+    tmp.wMilliseconds = 0;
+    return tmp;
+}
+
+#undef NS_SINCE_1970
+#undef U_10M
+#undef S_10M
+
+/*
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     LONG Bias;
     WCHAR StandardName[ 32 ];
@@ -41,23 +140,6 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     WCHAR TimeZoneKeyName[ 128 ];
     BOOLEAN DynamicDaylightTimeDisabled;
 } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
-*/
-
-/*
-
-typedef struct _SYSTEMTIME {
-
-    WORD wYear;
-    WORD wMonth;
-    WORD wDayOfWeek;
-    WORD wDay;
-    WORD wHour;
-    WORD wMinute;
-    WORD wSecond;
-    WORD wMilliseconds;
-
-} SYSTEMTIME, *PSYSTEMTIME;
-
 */
 
 #if _WIN32
@@ -72,7 +154,7 @@ int today_year ( ) noexcept {
 
 bool is_leap_year ( int const y_ ) noexcept { return ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ); }
 
-// Returns the number of days for the given m_ (month) in_ the given y_ (year).
+// Returns the number of days for the given m_ (month) in the given y_ (year).
 int days_month ( int const y_, int const m_ ) noexcept {
     return m_ != 2 ? 30 + ( ( m_ + ( m_ > 7 ) ) % 2 ) : 28 + is_leap_year ( y_ );
 }
@@ -168,36 +250,6 @@ int days_since ( int const y_, int const m_, int const d_ ) noexcept {
     date.tm_mday     = d_;
     std::time_t then = std::mktime ( &date );
     return ( int ) std::difftime ( now, then ) / ( 24 * 60 * 60 );
-}
-
-std::tm systemtime_to_tm ( SYSTEMTIME const & in_ ) noexcept {
-    std::tm tmp{};
-    tmp.tm_sec                        = in_.wSecond;
-    tmp.tm_min                        = in_.wMinute;
-    tmp.tm_hour                       = in_.wHour;
-    tmp.tm_mday                       = in_.wDay;
-    tmp.tm_mon                        = in_.wMonth - 1;
-    int const y_                      = in_.wYear;
-    tmp.tm_year                       = y_ - 1900;
-    tmp.tm_wday                       = in_.wDayOfWeek;
-    constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-    tmp.tm_yday                       = cum_dim[ tmp.tm_mon ] + tmp.tm_mday +
-                  ( ( tmp.tm_mon > 1 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) );
-    tmp.tm_isdst = 0;
-    return tmp;
-}
-
-SYSTEMTIME tm_to_systemtime ( std::tm const & in_ ) noexcept {
-    SYSTEMTIME tmp{};
-    tmp.wYear         = in_.tm_year + 1'900;
-    tmp.wMonth        = in_.tm_mon + 1;
-    tmp.wDayOfWeek    = in_.tm_wday;
-    tmp.wDay          = in_.tm_mday;
-    tmp.wHour         = in_.tm_hour;
-    tmp.wMinute       = in_.tm_min;
-    tmp.wSecond       = in_.tm_sec;
-    tmp.wMilliseconds = 0;
-    return tmp;
 }
 
 // Return epoch from date.

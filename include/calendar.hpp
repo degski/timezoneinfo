@@ -41,6 +41,34 @@
 
 #include <fmt/core.h>
 
+union wintime_t {
+    FILETIME filetime;
+    std::uint64_t i;
+};
+
+using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
+
+[[nodiscard]] nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept;
+[[nodiscard]] wintime_t nixtime_to_wintime ( nixtime_t const nixtime_ ) noexcept;
+
+[[nodiscard]] wintime_t wintime ( ) noexcept;
+[[nodiscard]] nixtime_t nixtime ( ) noexcept;
+
+[[nodiscard]] SYSTEMTIME wintime_to_systemtime ( wintime_t const wintime_ ) noexcept;
+[[nodiscard]] SYSTEMTIME nixtime_to_systemtime ( nixtime_t const nixtime_ ) noexcept;
+
+[[nodiscard]] FILETIME wintime_to_filetime ( wintime_t const wintime_ ) noexcept;
+[[nodiscard]] FILETIME nixtime_to_filetime ( nixtime_t const nixtime_ ) noexcept;
+
+[[nodiscard]] wintime_t systemtime_to_wintime ( SYSTEMTIME const & systemtime_ ) noexcept;
+[[nodiscard]] nixtime_t systemtime_to_nixtime ( SYSTEMTIME const & systemtime_ ) noexcept;
+
+[[nodiscard]] wintime_t filetime_to_wintime ( FILETIME const filetime_ ) noexcept;
+[[nodiscard]] nixtime_t filetime_to_nixtime ( FILETIME const filetime_ ) noexcept;
+
+[[nodiscard]] std::tm systemtime_to_tm ( SYSTEMTIME const & systemtime_ ) noexcept;
+[[nodiscard]] SYSTEMTIME tm_to_systemtime ( std::tm const & tm_ ) noexcept;
+
 inline constexpr char const * dow[ 7 ]             = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 inline constexpr char const * day_of_the_week[ 7 ] = {
     "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saterday"
@@ -78,8 +106,6 @@ void print_date_time_t ( std::time_t const rawtime ) noexcept;
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
-[[nodiscard]] std::tm systemtime_to_tm ( SYSTEMTIME const & in_ ) noexcept;
-[[nodiscard]] SYSTEMTIME tm_to_systemtime ( std::tm const & in_ ) noexcept;
 
 // Return epoch (unix-time) from date.
 [[nodiscard]] std::time_t date_to_epoch ( int const y_, int const m_, int const d_ ) noexcept;
@@ -87,8 +113,8 @@ void print_date_time_t ( std::time_t const rawtime ) noexcept;
 [[nodiscard]] int local_utc_offset_minutes ( ) noexcept;
 
 template<typename Stream>
-[[maybe_unused]] Stream & operator<< ( Stream & os_, SYSTEMTIME const & st_ ) {
-    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", st_.wYear, st_.wMonth, st_.wDayOfWeek, st_.wDay, st_.wHour,
-                         st_.wMinute );
+[[maybe_unused]] Stream & operator<< ( Stream & os_, SYSTEMTIME const & systemtime_ ) {
+    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", systemtime_.wYear, systemtime_.wMonth, systemtime_.wDayOfWeek,
+                         systemtime_.wDay, systemtime_.wHour, systemtime_.wMinute );
     return os_;
 }
