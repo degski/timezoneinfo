@@ -218,9 +218,7 @@ typedef struct _SYSTEMTIME {
     std::tm date{};
     date.tm_year = today_year ( );
     date.tm_mon  = t.wMonth - 1;
-    date.tm_mday = weekday_day ( 0, date.tm_year, t.wMonth, t.wDayOfWeek ) + ( t.wDay - 1 ) * 7;
-    if ( date.tm_mday > days_month ( t.wYear, t.wMonth ) )
-        date.tm_mday -= 7;
+    date.tm_mday = weekday_day ( t.wDay - 1, date.tm_year, t.wMonth, t.wDayOfWeek );
     date.tm_year -= 1'900;
     date.tm_hour = t.wHour;
     date.tm_min  = t.wMinute;

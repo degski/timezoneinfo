@@ -200,7 +200,6 @@ SYSTEMTIME tm_to_systemtime ( std::tm const & in_ ) noexcept {
     return tmp;
 }
 
-
 // Return epoch from date.
 std::time_t date_to_epoch ( int const y_, int const m_, int const d_ ) noexcept {
     std::tm tm{};
