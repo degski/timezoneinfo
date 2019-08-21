@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <algorithm>
+
 /*
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     LONG Bias;
@@ -148,11 +150,11 @@ int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
 
 // Get the month day for the n_-th (base 0) weekday w_.
 int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept {
-    int const day = 1 + ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 + n_ * 7;
-    return n_ < 5 ? day : ( day > number_of_days_month ( y_, m_ ) ? day - 7 : day );
+    int const day = 1 + ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 + std::clamp ( n_, 0, 4 ) * 7;
+    return n_ < 4 ? day : day > number_of_days_month ( y_, m_ ) ? day - 7 : day;
 }
 
-int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 5, y_, m_, w_ ); }
+int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 4, y_, m_, w_ ); }
 
 int number_of_days_since ( int const y_, int const m_, int const d_ ) noexcept {
     std::time_t now = std::time ( nullptr );
