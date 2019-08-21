@@ -48,29 +48,43 @@ inline constexpr char const * day_of_the_week[ 7 ] = {
 inline constexpr char const * moy[ 12 ] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February", "March",     "April",   "May",      "June",
                                                           "July",    "August",   "September", "October", "November", "December" };
-
+// Returns the year.
 [[nodiscard]] int today_year ( ) noexcept;
+// Returns todays day in the month.
+[[nodiscard]] int today_monthday ( ) noexcept;
+
 [[nodiscard]] bool is_leap_year ( int const y_ ) noexcept;
 // Returns the number of days for the given m_ (month) in_ the given y_ (year).
-[[nodiscard]] int number_of_days_month ( int const y_, int const m_ ) noexcept;
-[[nodiscard]] int number_of_days_ytd ( int const y_, int const m_, int const d_ ) noexcept;
-[[nodiscard]] int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept;
-[[nodiscard]] int weekday ( int y_, int m_, int d_ ) noexcept;
-[[nodiscard]] int first_weekday_month ( int const y_, int const m_ ) noexcept;
-[[nodiscard]] int last_weekday_month ( int y_, int m_ ) noexcept;
-[[nodiscard]] std::time_t time_last_weekday_month ( int const y_, int const m_, int const w_ ) noexcept;
+[[nodiscard]] int days_month ( int const y_, int const m_ ) noexcept;
+// Returns the number of days YTD.
+[[nodiscard]] int year_days ( int const y_, int const m_, int const d_ ) noexcept;
+// Returns the number of weeks YTD.
+[[nodiscard]] int year_weeks ( int const y_, int const m_, int const d_ ) noexcept;
+// Returns the day of the week for a certain date, 0 == Sunday.
+[[nodiscard]] int day_week ( int y_, int m_, int d_ ) noexcept;
+// Return the first non-weekend day [a weekday, as no good antonym exists] in the month.
+[[nodiscard]] int first_weekday ( int const y_, int const m_ ) noexcept;
+// Return the last non-weekend day [a weekday, as no good antonym exists] in the month.
+[[nodiscard]] int last_weekday ( int y_, int m_ ) noexcept;
+// Return the first non-weekend day [a weekday, as no good antonym exists] in the month in UTC.
+[[nodiscard]] std::time_t last_weekday_time ( int const y_, int const m_, int const w_ ) noexcept;
 void set_tm_utc ( std::tm * tm_ ) noexcept;
-[[nodiscard]] bool is_workweek ( int const y_, int const m_, int const d_ ) noexcept;
+[[nodiscard]] bool is_weekday ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept;
-[[nodiscard]] int today_weekday ( ) noexcept;
-[[nodiscard]] bool is_today_workweek ( ) noexcept;
+
+[[nodiscard]] bool is_today_weekday ( ) noexcept;
 void print_date_time_t ( std::time_t const rawtime ) noexcept;
-// Get the month day for the n_-th (base 0) weekday w_.
+// Get the month day for the n_-th [ 0, 4 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-[[nodiscard]] int number_of_days_since ( int const y_, int const m_, int const d_ ) noexcept;
+[[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] std::tm systemtime_to_tm ( SYSTEMTIME const & in_ ) noexcept;
 [[nodiscard]] SYSTEMTIME tm_to_systemtime ( std::tm const & in_ ) noexcept;
+
+// Return epoch (unix-time) from date.
+[[nodiscard]] std::time_t date_to_epoch ( int const y_, int const m_, int const d_ ) noexcept;
+
+[[nodiscard]] int local_utc_offset_minutes ( ) noexcept;
 
 template<typename Stream>
 [[maybe_unused]] Stream & operator<< ( Stream & os_, SYSTEMTIME const & st_ ) {

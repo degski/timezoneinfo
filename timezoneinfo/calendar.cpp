@@ -29,8 +29,6 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <algorithm>
-
 /*
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     LONG Bias;
@@ -62,6 +60,10 @@ typedef struct _SYSTEMTIME {
 
 */
 
+#if _WIN32
+#    define timegm _mkgmtime
+#endif
+
 int today_year ( ) noexcept {
     std::time_t const now      = std::time ( nullptr );
     std::tm const * const date = std::gmtime ( &now );
@@ -71,18 +73,18 @@ int today_year ( ) noexcept {
 bool is_leap_year ( int const y_ ) noexcept { return ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ); }
 
 // Returns the number of days for the given m_ (month) in_ the given y_ (year).
-int number_of_days_month ( int const y_, int const m_ ) noexcept {
+int days_month ( int const y_, int const m_ ) noexcept {
     return m_ != 2 ? 30 + ( ( m_ + ( m_ > 7 ) ) % 2 ) : 28 + is_leap_year ( y_ );
 }
 
-int number_of_days_ytd ( int const y_, int const m_, int const d_ ) noexcept { // normal counting.
-    assert ( d_ <= number_of_days_month ( y_, m_ ) );
+int year_days ( int const y_, int const m_, int const d_ ) noexcept { // normal counting.
+    assert ( d_ <= days_month ( y_, m_ ) );
     constexpr short const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
     return cum_dim[ m_ - 1 ] + d_ + ( ( m_ > 2 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) );
 }
 
-int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept { // normal counting.
-    assert ( d_ <= number_of_days_month ( y_, m_ ) );
+int year_weeks ( int const y_, int const m_, int const d_ ) noexcept { // normal counting.
+    assert ( d_ <= days_month ( y_, m_ ) );
     constexpr short const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
     return ( ( ( cum_dim[ m_ - 1 ] + d_ + ( ( m_ > 2 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) ) ) -
                weekday_day ( 0, y_, 1, 0 ) ) /
@@ -90,28 +92,28 @@ int number_of_weeks_ytd ( int const y_, int const m_, int const d_ ) noexcept { 
            1;
 }
 
-int weekday ( int y_, int m_, int d_ ) noexcept {
+int day_week ( int y_, int m_, int d_ ) noexcept {
     // calendar_system = 1 for Gregorian Calendar, 0 for Julian Calendar
-    int const calendar_system = 1;
+    constexpr int const calendar_system = 1;
     if ( m_ < 3 )
         m_ += 12, y_ -= 1;
     return ( d_ + ( m_ << 1 ) + ( 6 * ( m_ + 1 ) / 10 ) + y_ + ( y_ >> 2 ) - ( y_ / 100 ) + ( y_ / 400 ) + calendar_system ) % 7;
 }
 
-int first_weekday_month ( int const y_, int const m_ ) noexcept { return weekday ( y_, m_, 1 ); }
+int first_weekday ( int const y_, int const m_ ) noexcept { return day_week ( y_, m_, 1 ); }
 
-int first_weekday_next_month ( int y_, int m_ ) noexcept { return m_ != 12 ? weekday ( y_, ++m_, 1 ) : weekday ( ++y_, 1, 1 ); }
+int next_first_weekday ( int y_, int m_ ) noexcept { return m_ != 12 ? day_week ( y_, ++m_, 1 ) : day_week ( ++y_, 1, 1 ); }
 
-int last_weekday_month ( int y_, int m_ ) noexcept {
-    return ( ( m_ != 12 ) ? ( ( weekday ( y_, ++m_, 1 ) + 6 ) % 7 ) : ( ( weekday ( ++y_, 1, 1 ) + 6 ) % 7 ) );
+int last_weekday ( int y_, int m_ ) noexcept {
+    return ( ( m_ != 12 ) ? ( ( day_week ( y_, ++m_, 1 ) + 6 ) % 7 ) : ( ( day_week ( ++y_, 1, 1 ) + 6 ) % 7 ) );
 }
 
-std::time_t time_last_weekday_month ( int const y_, int const m_, int const w_ ) noexcept {
+std::time_t last_weekday_time ( int const y_, int const m_, int const w_ ) noexcept {
     std::tm date{};
     date.tm_year = y_ - 1'900; // two digit y_!
     date.tm_mon  = m_ - 1;
     date.tm_mday = last_weekday_day ( y_, m_, w_ );
-    return std::mktime ( &date );
+    return timegm ( &date );
 }
 
 void set_tm_utc ( std::tm * tm_ ) noexcept {
@@ -119,22 +121,22 @@ void set_tm_utc ( std::tm * tm_ ) noexcept {
     tm_                 = std::gmtime ( &rawtime );
 }
 
-bool is_workweek ( int const y_, int const m_, int const d_ ) noexcept {
-    int const dow = weekday ( y_, m_, d_ );
+bool is_weekday ( int const y_, int const m_, int const d_ ) noexcept {
+    int const dow = day_week ( y_, m_, d_ );
     return not( dow == 0 or dow == 6 );
 }
 
-bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept { return not is_workweek ( y_, m_, d_ ); }
+bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept { return not is_weekday ( y_, m_, d_ ); }
 
-int today_weekday ( ) noexcept {
+int today_monthday ( ) noexcept {
     std::time_t now = std::time ( nullptr );
     std::tm date;
     localtime_s ( &date, &now );
     return date.tm_wday;
 }
 
-bool is_today_workweek ( ) noexcept {
-    int const dow = today_weekday ( );
+bool is_today_weekday ( ) noexcept {
+    int const dow = today_monthday ( );
     return not( dow == 0 or dow == 6 );
 }
 
@@ -145,18 +147,20 @@ void print_date_time_t ( std::time_t const rawtime ) noexcept {
 }
 
 int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
-    return ( 1 + ( ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 ) );
+    return ( 1 + ( ( 7 - first_weekday ( y_, m_ ) + w_ ) % 7 ) );
 }
 
-// Get the month day for the n_-th (base 0) weekday w_.
+// Get the month day for the n_-th [ 0, 4 ] day_week w_.
 int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept {
-    int const day = 1 + ( 7 - first_weekday_month ( y_, m_ ) + w_ ) % 7 + std::clamp ( n_, 0, 4 ) * 7;
-    return n_ < 4 ? day : day > number_of_days_month ( y_, m_ ) ? day - 7 : day;
+    assert ( n_ >= 0 );
+    assert ( n_ <= 4 );
+    int const day = 1 + ( 7 - first_weekday ( y_, m_ ) + w_ ) % 7 + n_ * 7;
+    return n_ < 4 ? day : day > days_month ( y_, m_ ) ? day - 7 : day;
 }
 
 int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 4, y_, m_, w_ ); }
 
-int number_of_days_since ( int const y_, int const m_, int const d_ ) noexcept {
+int days_since ( int const y_, int const m_, int const d_ ) noexcept {
     std::time_t now = std::time ( nullptr );
     std::tm date{};
     date.tm_year     = y_ - 1'900;
@@ -195,3 +199,25 @@ SYSTEMTIME tm_to_systemtime ( std::tm const & in_ ) noexcept {
     tmp.wMilliseconds = 0;
     return tmp;
 }
+
+
+// Return epoch from date.
+std::time_t date_to_epoch ( int const y_, int const m_, int const d_ ) noexcept {
+    std::tm tm{};
+    tm.tm_year = y_ - 1900;
+    tm.tm_mon  = m_ - 1;
+    tm.tm_mday = d_;
+    return timegm ( &tm );
+}
+
+int local_utc_offset_minutes ( ) noexcept {
+    std::time_t t  = std::time ( nullptr );
+    std::tm * locg = std::localtime ( &t );
+    std::tm locl;
+    std::memcpy ( &locl, locg, sizeof ( std::tm ) );
+    return static_cast<int> ( timegm ( locg ) - mktime ( &locl ) ) / 60;
+}
+
+#if _WIN32
+#    undef timegm
+#endif
