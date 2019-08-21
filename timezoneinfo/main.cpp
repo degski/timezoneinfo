@@ -214,7 +214,7 @@ typedef struct _SYSTEMTIME {
     return tzi;
 }
 
-[[nodiscard]] std::tm get_tzi_date ( SYSTEMTIME const & t ) noexcept {
+[[nodiscard]] std::tm get_tzi_tm ( SYSTEMTIME const & t ) noexcept {
     std::tm date{};
     date.tm_year = today_year ( );
     date.tm_mon  = t.wMonth - 1;
@@ -249,9 +249,9 @@ int main ( ) {
     std::cout << tzi.DaylightBias << nl;
     std::cout << tzi.DaylightDate << nl;
 
-    std::tm t1 = get_tzi_date ( tzi.StandardDate );
+    std::tm t1 = get_tzi_tm ( tzi.StandardDate );
     std::cout << std::put_time ( &t1, "%c" ) << '\n';
-    std::tm t2 = get_tzi_date ( tzi.DaylightDate );
+    std::tm t2 = get_tzi_tm ( tzi.DaylightDate );
     std::cout << std::put_time ( &t2, "%c" ) << '\n';
 
     return EXIT_SUCCESS;
