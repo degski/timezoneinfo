@@ -111,6 +111,8 @@ using Map      = std::vector<KeyValue>;
 
 /*
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
+    // The bias is the difference, in minutes, between Coordinated Universal Time (UTC) and local time.
+    // UTC = local time + bias.
     LONG Bias;
     WCHAR StandardName[ 32 ];
     SYSTEMTIME StandardDate;
@@ -158,7 +160,9 @@ typedef struct _SYSTEMTIME {
     std::wstring const desc = fmt::to_wstring ( desc_ );
     std::wstring const uri  = std::wstring ( L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc;
 
-    RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_READ, &key );
+    auto result = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_READ, &key );
+
+    assert ( ERROR_SUCCESS == result );
 
     data_length = sizeof ( REG_TZI_FORMAT );
     RegQueryValueEx ( key, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi_format, &data_length );
@@ -168,14 +172,19 @@ typedef struct _SYSTEMTIME {
     data_length = 64;
     RegQueryValueEx ( key, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) &tzi.StandardName, &data_length );
 
-    tzi.StandardDate = reg_tzi_format.StandardDate;
-    tzi.StandardBias = reg_tzi_format.StandardBias;
+    if ( reg_tzi_format.StandardDate.wMonth ) {
+        tzi.StandardDate = reg_tzi_format.StandardDate;
+        tzi.StandardBias = reg_tzi_format.StandardBias;
+    }
 
-    data_length = 64;
-    RegQueryValueEx ( key, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &data_length );
+    if ( reg_tzi_format.DaylightDate.wMonth ) {
+        data_length = 64;
+        RegQueryValueEx ( key, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &data_length );
+        tzi.DaylightDate = reg_tzi_format.DaylightDate;
+        tzi.DaylightBias = reg_tzi_format.DaylightBias;
+    }
 
-    tzi.DaylightDate = reg_tzi_format.DaylightDate;
-    tzi.DaylightBias = reg_tzi_format.DaylightBias;
+    assert ( not reg_tzi_format.StandardDate.wMonth == not reg_tzi_format.DaylightDate.wMonth );
 
     RegCloseKey ( key );
 
@@ -200,10 +209,14 @@ typedef struct _SYSTEMTIME {
                               &data_length );
 
             tzi.Bias         = reg_tzi_format.Bias; // UTC = local time + bias
-            tzi.StandardDate = reg_tzi_format.StandardDate;
-            tzi.StandardBias = reg_tzi_format.StandardBias;
-            tzi.DaylightDate = reg_tzi_format.DaylightDate;
-            tzi.DaylightBias = reg_tzi_format.DaylightBias;
+            if ( reg_tzi_format.StandardDate.wMonth ) {
+                tzi.StandardDate = reg_tzi_format.StandardDate;
+                tzi.StandardBias = reg_tzi_format.StandardBias;
+            }
+            if ( reg_tzi_format.DaylightDate.wMonth ) {
+                tzi.DaylightDate = reg_tzi_format.DaylightDate;
+                tzi.DaylightBias = reg_tzi_format.DaylightBias;
+            }
         }
     }
 
@@ -216,43 +229,63 @@ typedef struct _SYSTEMTIME {
 
 [[nodiscard]] std::tm get_tzi_tm ( SYSTEMTIME const & t ) noexcept {
     std::tm date{};
-    date.tm_year = today_year ( );
-    date.tm_mon  = t.wMonth - 1;
-    date.tm_mday = weekday_day ( t.wDay - 1, date.tm_year, t.wMonth, t.wDayOfWeek );
-    date.tm_year -= 1'900;
-    date.tm_hour = t.wHour;
-    date.tm_min  = t.wMinute;
-    date.tm_sec  = 0;
+    if ( t.wMonth ) {
+        date.tm_year = today_year ( );
+        date.tm_mon  = t.wMonth - 1;
+        date.tm_mday = weekday_day ( t.wDay, date.tm_year, t.wMonth, t.wDayOfWeek );
+        date.tm_year -= 1'900;
+        date.tm_hour = t.wHour;
+        date.tm_min  = t.wMinute;
+        date.tm_sec  = 0;
+    }
     return date;
+}
+
+void print_tzi ( TIME_ZONE_INFORMATION const & tzi ) noexcept {
+    std::cout << "Bias " << tzi.Bias << nl;
+    std::wcout << tzi.StandardName << nl;
+    if ( tzi.StandardDate.wMonth ) {
+        std::cout << "StandardBias " << tzi.StandardBias << nl;
+        std::tm t1 = get_tzi_tm ( tzi.StandardDate );
+        std::cout << std::put_time ( &t1, "%c" ) << '\n';
+    }
+    if ( tzi.DaylightDate.wMonth ) {
+        std::wcout << tzi.DaylightName << nl;
+        std::cout << "DaylightBias " << tzi.DaylightBias << nl;
+        std::tm t2 = get_tzi_tm ( tzi.DaylightDate );
+        std::cout << std::put_time ( &t2, "%c" ) << '\n';
+    }
+}
+
+
+bool has_dst ( TIME_ZONE_INFORMATION const & tzi ) noexcept {
+    return tzi.StandardDate.wMonth;
 }
 
 int main ( ) {
 
     // https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml
 
-    std::map<std::string, Info> map{ buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" ) };
+    // std::map<std::string, Info> map{ buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" ) };
 
     // std::cout << map.size ( ) << nl;
 
     // for ( auto const & e : map )
     // std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
 
-    TIME_ZONE_INFORMATION tzi = get_tzi ( "W. Europe Standard Time" );
+    TIME_ZONE_INFORMATION tzi1 = get_tzi ( "W. Europe Standard Time" );
 
-    std::cout << tzi.Bias << nl;
+    std::cout << "dst " << std::boolalpha << has_dst ( tzi1 ) << nl;
 
-    std::wcout << tzi.StandardName << nl;
-    std::cout << tzi.StandardBias << nl;
-    std::cout << tzi.StandardDate << nl;
+    print_tzi ( tzi1 );
 
-    std::wcout << tzi.DaylightName << nl;
-    std::cout << tzi.DaylightBias << nl;
-    std::cout << tzi.DaylightDate << nl;
+    std::cout << nl;
 
-    std::tm t1 = get_tzi_tm ( tzi.StandardDate );
-    std::cout << std::put_time ( &t1, "%c" ) << '\n';
-    std::tm t2 = get_tzi_tm ( tzi.DaylightDate );
-    std::cout << std::put_time ( &t2, "%c" ) << '\n';
+    TIME_ZONE_INFORMATION tzi2 = get_tzi ( "South Africa Standard Time" );
+
+    std::cout << "dst " << std::boolalpha << has_dst ( tzi2 ) << nl;
+
+    print_tzi ( tzi2 );
 
     return EXIT_SUCCESS;
 }

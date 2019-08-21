@@ -150,15 +150,15 @@ int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {
     return ( 1 + ( ( 7 - first_weekday ( y_, m_ ) + w_ ) % 7 ) );
 }
 
-// Get the month day for the n_-th [ 0, 4 ] day_week w_.
+// Get the month day for the n_-th [ 1, 5 ] day_week w_.
 int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept {
     assert ( n_ >= 0 );
-    assert ( n_ <= 4 );
-    int const day = 1 + ( 7 - first_weekday ( y_, m_ ) + w_ ) % 7 + n_ * 7;
-    return n_ < 4 ? day : day > days_month ( y_, m_ ) ? day - 7 : day;
+    assert ( n_ <= 5 );
+    int const day = 1 + ( 7 - first_weekday ( y_, m_ ) + w_ ) % 7 + ( n_ - 1 ) * 7;
+    return n_ < 5 ? day : day > days_month ( y_, m_ ) ? day - 7 : day;
 }
 
-int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 4, y_, m_, w_ ); }
+int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 5, y_, m_, w_ ); }
 
 int days_since ( int const y_, int const m_, int const d_ ) noexcept {
     std::time_t now = std::time ( nullptr );

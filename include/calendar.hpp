@@ -74,7 +74,7 @@ void set_tm_utc ( std::tm * tm_ ) noexcept;
 
 [[nodiscard]] bool is_today_weekday ( ) noexcept;
 void print_date_time_t ( std::time_t const rawtime ) noexcept;
-// Get the month day for the n_-th [ 0, 4 ] day_week w_.
+// Get the month day for the n_-th [ 1, 5 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
