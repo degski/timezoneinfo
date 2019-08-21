@@ -159,33 +159,24 @@ typedef struct _SYSTEMTIME {
     // Create URI.
     std::wstring const desc = fmt::to_wstring ( desc_ );
     std::wstring const uri  = std::wstring ( L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc;
-
     auto result = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_READ, &key );
-
     assert ( ERROR_SUCCESS == result );
-
     data_length = sizeof ( REG_TZI_FORMAT );
     RegQueryValueEx ( key, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi_format, &data_length );
-
-    tzi.Bias = reg_tzi_format.Bias; // UTC = local time + bias
-
+    tzi.Bias = reg_tzi_format.Bias; // UTC = local time + bias.
     data_length = 64;
     RegQueryValueEx ( key, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) &tzi.StandardName, &data_length );
-
     if ( reg_tzi_format.StandardDate.wMonth ) {
         tzi.StandardDate = reg_tzi_format.StandardDate;
         tzi.StandardBias = reg_tzi_format.StandardBias;
     }
-
     if ( reg_tzi_format.DaylightDate.wMonth ) {
         data_length = 64;
         RegQueryValueEx ( key, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &data_length );
         tzi.DaylightDate = reg_tzi_format.DaylightDate;
         tzi.DaylightBias = reg_tzi_format.DaylightBias;
     }
-
     assert ( not reg_tzi_format.StandardDate.wMonth == not reg_tzi_format.DaylightDate.wMonth );
-
     RegCloseKey ( key );
 
 #if 0
