@@ -24,12 +24,23 @@
 #pragma once
 
 #if _WIN32
+#    pragma comment( lib, "ws2_32.lib" )
+#    pragma comment( lib, "Crypt32.lib" )
+#    pragma comment( lib, "winmm.lib" )
+#    pragma comment( lib, "wldap32.lib" )
 #    if defined( _DEBUG )
+#        pragma comment( lib, "zlibd.lib" )
+#        pragma comment( lib, "libcurl-d.lib" )
 #        pragma comment( lib, "tinyxml2d.lib" )
 #    else
+#        pragma comment( lib, "zlib.lib" )
+#        pragma comment( lib, "libcurl.lib" )
 #        pragma comment( lib, "tinyxml2.lib" )
 #    endif
+#    pragma comment( lib, "libcurlpp.lib" )
 #endif
+
+#include "timezoneinfo.hpp"
 
 #include <filesystem>
 #include <map>
@@ -46,6 +57,6 @@ using IanaMap = std::map<std::string, Info>;
 
 [[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( fs::path const & path_ );
 
-// https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml
+inline IanaMap const g_iana = buildIanaToWindowsZonesMap ( g_windows_zones_path );
 
-inline IanaMap const g_iana = buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" );
+[[nodiscard]] std::string download_windows_zones ( );

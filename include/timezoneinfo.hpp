@@ -31,6 +31,8 @@
 #    endif
 #endif
 
+#include "calendar.hpp"
+
 #ifndef NOMINMAX
 #    define NOMINMAX
 #endif
@@ -45,7 +47,15 @@
 
 #include <Windows.h>
 
+#include <filesystem>
 #include <string>
+
+namespace fs = std::filesystem;
+
+[[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept;
+
+inline fs::path const g_app_data_path      = get_app_data_path ( L"timezoneinfo" );
+inline fs::path const g_windows_zones_path = g_app_data_path / L"windowsZones.xml";
 
 using tzi_t = TIME_ZONE_INFORMATION;
 

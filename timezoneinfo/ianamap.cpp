@@ -27,8 +27,14 @@
 #include <sax/iostream.hpp>
 #include <sax/stl.hpp>
 #include <sax/string_split.hpp>
+#include <sstream>
 #include <string>
 #include <string_view>
+
+#include <curlpp/cURLpp.hpp>
+
+#include <curlpp/Easy.hpp>
+#include <curlpp/Options.hpp>
 
 #include <tinyxml2.h>
 
@@ -68,4 +74,23 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
             break;
     }
     return map;
+}
+
+std::string download_windows_zones ( ) {
+    std::stringstream ss;
+    try {
+        curlpp::Easy request;
+        request.setOpt<curlpp::options::WriteStream> ( &ss );
+        request.setOpt<curlpp::options::Encoding> ( "deflate" );
+        request.setOpt<curlpp::options::Url> (
+            "https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml" );
+        request.perform ( );
+    }
+    catch ( curlpp::RuntimeError & e ) {
+        std::cout << e.what ( ) << std::endl;
+    }
+    catch ( curlpp::LogicError & e ) {
+        std::cout << e.what ( ) << std::endl;
+    }
+    return ss.str ( );
 }

@@ -36,6 +36,15 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
+[[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
+    wchar_t * value;
+    std::size_t len;
+    _wdupenv_s ( &value, &len, L"USERPROFILE" );
+    fs::path return_value ( std::wstring ( value ) + std::wstring ( L"\\AppData\\Roaming\\" + place_ ) );
+    fs::create_directory ( return_value ); // No error if directory exists.
+    return return_value;
+}
+
 [[nodiscard]] tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     // The registry entry for TZI.
     struct REG_TZI_FORMAT {

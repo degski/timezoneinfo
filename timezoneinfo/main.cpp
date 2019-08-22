@@ -70,6 +70,8 @@ int main ( ) {
     // for ( auto const & e : g_iana )
     //  std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
 
+    /*
+
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
     print_nixtime ( get_nixtime_in_tz ( tzi1 ) );
@@ -78,6 +80,10 @@ int main ( ) {
 
     print_nixtime ( get_nixtime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
+
+    */
+
+    std::cout << download_windows_zones ( ) << nl;
 
     return EXIT_SUCCESS;
 }
