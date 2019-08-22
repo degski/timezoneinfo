@@ -40,9 +40,9 @@
 bool init ( ) {
     if ( fs::exists ( g_timestamps_path ) )
         load_timestamps ( );
-    if ( not fs::exists ( g_windows_zones_path ) or ( wintime ( ).i - g_timestamps.at ( "last_windowszones_download" ) ) >
-                                                        ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
-        download_windows_zones ( );
+    if ( not fs::exists ( g_windowszones_path ) or ( wintime ( ).i - g_timestamps.at ( "last_windowszones_download" ) ) >
+                                                       ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
+        download_windowszones ( );
         g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
         save_timestamps ( );
     }

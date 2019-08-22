@@ -39,31 +39,31 @@
 
 #include <tinyxml2.h>
 
-char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char const name_[] ) noexcept {
+char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char const name_[] ) noexcept {
     char const * out;
     element_->QueryStringAttribute ( name_, &out );
     return out;
 }
 
-[[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( ) {
+[[nodiscard]] IanaMap build_iana_to_windowszones_map ( ) {
     IanaMap map;
     tinyxml2::XMLDocument doc;
-    if ( not fs::exists ( g_windows_zones_path ) ) {
-        download_windows_zones ( );
+    if ( not fs::exists ( g_windowszones_path ) ) {
+        download_windowszones ( );
         g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
         save_timestamps ( );
     }
-    doc.LoadFile ( g_windows_zones_path.string ( ).c_str ( ) );
+    doc.LoadFile ( g_windowszones_path.string ( ).c_str ( ) );
     tinyxml2::XMLElement const * element = doc.FirstChildElement ( "supplementalData" )
                                                ->FirstChildElement ( "windowsZones" )
                                                ->FirstChildElement ( "mapTimezones" )
                                                ->FirstChildElement ( "mapZone" );
     tinyxml2::XMLElement const * const last_element = element->Parent ( )->LastChildElement ( "mapZone" );
     while ( true ) {
-        auto const other     = elementToCStr ( element, "other" );
-        auto const territory = elementToCStr ( element, "territory" );
+        auto const other     = element_to_cstr ( element, "other" );
+        auto const territory = element_to_cstr ( element, "territory" );
         if ( std::strncmp ( "001", territory, 3 ) ) {
-            for ( auto & ia : sax::string_split ( std::string_view{ elementToCStr ( element, "type" ) }, " " ) ) {
+            for ( auto & ia : sax::string_split ( std::string_view{ element_to_cstr ( element, "type" ) }, " " ) ) {
                 if ( "Etc" == ia.substr ( 0u, 3u ) )
                     ia = ia.substr ( 4u, ia.size ( ) - 4 );
                 std::string ais{ ia };
@@ -82,8 +82,8 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
     return map;
 }
 
-void download_windows_zones ( ) {
-    std::ofstream o ( g_windows_zones_path );
+void download_windowszones ( ) {
+    std::ofstream o ( g_windowszones_path );
     try {
         curlpp::Easy request;
         request.setOpt<curlpp::options::WriteStream> ( &o );
