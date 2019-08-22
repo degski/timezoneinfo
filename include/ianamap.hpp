@@ -55,8 +55,8 @@ struct Info {
 
 using IanaMap = std::map<std::string, Info>;
 
-[[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( fs::path const & path_ );
+[[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( );
 
-inline IanaMap const g_iana = buildIanaToWindowsZonesMap ( g_windows_zones_path );
+inline IanaMap const g_iana = buildIanaToWindowsZonesMap ( );
 
-[[nodiscard]] std::string download_windows_zones ( );
+void download_windows_zones ( );

@@ -48,6 +48,7 @@
 #include <Windows.h>
 
 #include <filesystem>
+#include <map>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -59,9 +60,17 @@ inline fs::path const g_windows_zones_path = g_app_data_path / L"windowsZones.xm
 
 using tzi_t = TIME_ZONE_INFORMATION;
 
+using Timestamps = std::map<std::string, std::uint64_t>;
+
+inline Timestamps g_timestamps;
+inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
+
 [[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
 [[nodiscard]] bool has_dst ( tzi_t const & tzi ) noexcept;
 
 [[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept;
 [[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept;
 [[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept;
+
+void save_timestamps ( );
+void load_timestamps ( );

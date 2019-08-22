@@ -23,17 +23,18 @@
 
 #include "ianamap.hpp"
 
+#include <fstream>
 #include <map>
 #include <sax/iostream.hpp>
 #include <sax/stl.hpp>
 #include <sax/string_split.hpp>
-#include <sstream>
 #include <string>
 #include <string_view>
 
 #include <curlpp/cURLpp.hpp>
 
 #include <curlpp/Easy.hpp>
+#include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
 
 #include <tinyxml2.h>
@@ -44,10 +45,15 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
     return out;
 }
 
-[[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( fs::path const & path_ ) {
+[[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( ) {
     IanaMap map;
     tinyxml2::XMLDocument doc;
-    doc.LoadFile ( path_.string ( ).c_str ( ) );
+    if ( not fs::exists ( g_windows_zones_path ) ) {
+        download_windows_zones ( );
+        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
+        save_timestamps ( );
+    }
+    doc.LoadFile ( g_windows_zones_path.string ( ).c_str ( ) );
     tinyxml2::XMLElement const * element = doc.FirstChildElement ( "supplementalData" )
                                                ->FirstChildElement ( "windowsZones" )
                                                ->FirstChildElement ( "mapTimezones" )
@@ -56,7 +62,7 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
     while ( true ) {
         auto const other     = elementToCStr ( element, "other" );
         auto const territory = elementToCStr ( element, "territory" );
-        if ( "001" != territory ) {
+        if ( std::strncmp ( "001", territory, 3 ) ) {
             for ( auto & ia : sax::string_split ( std::string_view{ elementToCStr ( element, "type" ) }, " " ) ) {
                 if ( "Etc" == ia.substr ( 0u, 3u ) )
                     ia = ia.substr ( 4u, ia.size ( ) - 4 );
@@ -76,11 +82,11 @@ char const * elementToCStr ( tinyxml2::XMLElement const * const element_, char c
     return map;
 }
 
-std::string download_windows_zones ( ) {
-    std::stringstream ss;
+void download_windows_zones ( ) {
+    std::ofstream o ( g_windows_zones_path );
     try {
         curlpp::Easy request;
-        request.setOpt<curlpp::options::WriteStream> ( &ss );
+        request.setOpt<curlpp::options::WriteStream> ( &o );
         request.setOpt<curlpp::options::Encoding> ( "deflate" );
         request.setOpt<curlpp::options::Url> (
             "https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml" );
@@ -92,5 +98,6 @@ std::string download_windows_zones ( ) {
     catch ( curlpp::LogicError & e ) {
         std::cout << e.what ( ) << std::endl;
     }
-    return ss.str ( );
+    o.flush ( );
+    o.close ( );
 }

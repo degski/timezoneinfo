@@ -31,10 +31,16 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <fstream>
 #include <sax/iostream.hpp>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+
+#include <nlohmann/json.hpp>
+
+// for convenience.
+using json = nlohmann::json;
 
 [[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
     wchar_t * value;
@@ -135,6 +141,22 @@
 
 [[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept {
     return wintime_to_nixtime ( get_wintime_in_tz ( tzi_ ) );
+}
+
+void save_timestamps ( ) {
+    json const j = g_timestamps;
+    std::ofstream o ( g_timestamps_path );
+    o << j.dump ( 4 ) << std::endl;
+    o.flush ( );
+    o.close ( );
+}
+
+void load_timestamps ( ) {
+    json j;
+    std::ifstream i ( g_timestamps_path );
+    i >> j;
+    i.close ( );
+    g_timestamps = j.get<Timestamps> ( );
 }
 
 /*

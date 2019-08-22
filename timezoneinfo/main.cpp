@@ -65,12 +65,49 @@
 
 namespace fs = std::filesystem;
 
+#include <nlohmann/json.hpp>
+
+// for convenience.
+using json = nlohmann::json;
+
+void init ( ) {
+    if ( fs::exists ( g_timestamps_path ) )
+        load_timestamps ( );
+    if ( not fs::exists ( g_windows_zones_path ) or ( wintime ( ).i - g_timestamps.at ( "last_windowszones_download" ) ) >
+                                                        ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
+        download_windows_zones ( );
+        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
+        save_timestamps ( );
+    }
+}
+
+void save_to_file ( json const & j_, std::wstring const & name_ ) {
+    std::ofstream o ( g_app_data_path / ( name_ + L".json" ) );
+    o << std::setw ( 4 ) << j_ << std::endl;
+    o.flush ( );
+    o.close ( );
+}
+
+void load_from_file ( json & j_, std::wstring const & name_ ) {
+    std::ifstream i ( g_app_data_path / ( name_ + L".json" ) );
+    i >> j_;
+    i.close ( );
+}
+
+json load ( fs::path const & file_ ) {
+    json a;
+    std::ifstream i ( file_ );
+    i >> a;
+    i.close ( );
+    return a;
+}
+
 int main ( ) {
+
+    init ( );
 
     // for ( auto const & e : g_iana )
     //  std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
-
-    /*
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
@@ -80,10 +117,6 @@ int main ( ) {
 
     print_nixtime ( get_nixtime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
-
-    */
-
-    std::cout << download_windows_zones ( ) << nl;
 
     return EXIT_SUCCESS;
 }
