@@ -25,33 +25,27 @@
 
 #if _WIN32
 #    if defined( _DEBUG )
-#        pragma comment( lib, "fmtd.lib" )
+#        pragma comment( lib, "tinyxml2d.lib" )
 #    else
-#        pragma comment( lib, "fmt.lib" )
+#        pragma comment( lib, "tinyxml2.lib" )
 #    endif
 #endif
 
-#ifndef NOMINMAX
-#    define NOMINMAX
-#endif
-
-#ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#endif
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#    define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#include <Windows.h>
-
+#include <filesystem>
+#include <map>
+#include <sax/stl.hpp>
 #include <string>
 
-using tzi_t = TIME_ZONE_INFORMATION;
+namespace fs = std::filesystem;
 
-[[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
-[[nodiscard]] bool has_dst ( tzi_t const & tzi ) noexcept;
+struct Info {
+    std::string name, code;
+};
 
-[[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept;
-[[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept;
-[[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept;
+using IanaMap = std::map<std::string, Info>;
+
+[[nodiscard]] IanaMap buildIanaToWindowsZonesMap ( fs::path const & path_ );
+
+// https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml
+
+inline IanaMap const g_iana = buildIanaToWindowsZonesMap ( "Y:/REPOS/timezoneinfo/windowsZones.xml" );

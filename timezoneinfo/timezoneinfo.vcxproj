@@ -44,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>llvm</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -225,10 +225,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="calendar.cpp" />
+    <ClCompile Include="ianamap.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="timezoneinfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\calendar.hpp" />
+    <ClInclude Include="..\include\ianamap.hpp" />
     <ClInclude Include="..\include\timezoneinfo.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
