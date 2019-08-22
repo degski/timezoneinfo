@@ -125,7 +125,7 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
 } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
 */
 
-[[nodiscard]] TIME_ZONE_INFORMATION get_tzi ( std::string const & desc_ ) noexcept {
+[[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept {
     // The registry entry for TZI.
     struct REG_TZI_FORMAT {
         LONG Bias;
@@ -138,7 +138,7 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     HKEY key = nullptr;
     DWORD data_length;
     REG_TZI_FORMAT reg_tzi_format{};
-    TIME_ZONE_INFORMATION tzi{};
+    tzi_t tzi{};
     // Create URI.
     std::wstring const desc = fmt::to_wstring ( desc_ );
     std::wstring const uri  = std::wstring ( L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc;
@@ -201,66 +201,7 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     return tzi;
 }
 
-[[nodiscard]] std::tm get_tzi_tm ( systime_t const & t ) noexcept {
-    std::tm date{};
-    if ( t.wMonth ) {
-        date.tm_year = today_year ( );
-        date.tm_mon  = t.wMonth - 1;
-        date.tm_mday = weekday_day ( t.wDay, date.tm_year, t.wMonth, t.wDayOfWeek );
-        date.tm_year -= 1'900;
-        date.tm_hour = t.wHour;
-        date.tm_min  = t.wMinute;
-        date.tm_sec  = 0;
-    }
-    return date;
-}
-
-#if _WIN32
-#    define timegm _mkgmtime
-#endif
-
-[[nodiscard]] std::time_t get_tzi_timegm ( systime_t const & t ) noexcept {
-    if ( t.wMonth ) {
-        std::tm date{};
-        date.tm_year = today_year ( );
-        date.tm_mon  = t.wMonth - 1;
-        date.tm_mday = weekday_day ( t.wDay, date.tm_year, t.wMonth, t.wDayOfWeek );
-        date.tm_year -= 1'900;
-        date.tm_hour = t.wHour;
-        date.tm_min  = t.wMinute;
-        date.tm_sec  = 0;
-        return timegm ( &date );
-    }
-    else
-        return 0;
-}
-
-#if _WIN32
-#    undef timegm
-#endif
-
-void print_tzi ( TIME_ZONE_INFORMATION const & tzi ) noexcept {
-    std::cout << "Bias " << tzi.Bias << nl;
-    std::wcout << tzi.StandardName << nl;
-    if ( tzi.StandardDate.wMonth ) {
-        std::cout << "StandardBias " << tzi.StandardBias << nl;
-        std::tm t1 = get_tzi_tm ( tzi.StandardDate );
-        std::cout << std::put_time ( &t1, "%c" ) << nl;
-        std::cout << get_tzi_timegm ( tzi.StandardDate ) << nl;
-    }
-    if ( tzi.DaylightDate.wMonth ) {
-        std::wcout << tzi.DaylightName << nl;
-        std::cout << "DaylightBias " << tzi.DaylightBias << nl;
-        std::tm t2 = get_tzi_tm ( tzi.DaylightDate );
-        std::cout << std::put_time ( &t2, "%c" ) << nl;
-        std::cout << get_tzi_timegm ( tzi.DaylightDate ) << nl;
-    }
-}
-
-// UTC = local time + bias
-// local time = UTC - bias
-
-[[nodiscard]] bool has_dst ( TIME_ZONE_INFORMATION const & tzi ) noexcept { return tzi.StandardDate.wMonth; }
+[[nodiscard]] bool has_dst ( tzi_t const & tzi ) noexcept { return tzi.StandardDate.wMonth; }
 
 /*
 
@@ -279,45 +220,31 @@ typedef struct _SYSTEMTIME {
 
 */
 
-[[nodiscard]] systime_t get_tzi_systime ( systime_t const & t ) noexcept {
-    if ( t.wMonth ) {
-        systime_t date = t;
-        date.wYear      = today_year ( );
-        date.wDay       = weekday_day ( t.wDay, date.wYear, t.wMonth, t.wDayOfWeek );
-        date.wDayOfWeek = day_week ( date.wYear, t.wMonth, date.wDay );
-    }
-    return {};
-}
-
-[[nodiscard]] nixtime_t get_nixtime_in_tz ( TIME_ZONE_INFORMATION const & tzi_ ) noexcept {
-    systime_t system_time = systime ( ), local_time;
-    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
-    return systime_to_nixtime ( local_time );
-}
-
-[[nodiscard]] wintime_t get_wintime_in_tz ( TIME_ZONE_INFORMATION const & tzi_ ) noexcept {
-    systime_t system_time = systime ( ), local_time;
-    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
-    return systime_to_wintime ( local_time );
-}
-
-[[nodiscard]] systime_t get_systime_in_tz ( TIME_ZONE_INFORMATION const & tzi_ ) noexcept {
+[[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept {
     systime_t system_time = systime ( ), local_time;
     SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
     return local_time;
 }
 
-    /*
+[[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept {
+    return systime_to_wintime ( get_systime_in_tz ( tzi_ ) );
+}
+
+[[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept {
+    return wintime_to_nixtime ( get_wintime_in_tz ( tzi_ ) );
+}
+
+/*
 
 typedef struct _TIME_ZONE_INFORMATION {
-  LONG       Bias;
-  WCHAR      StandardName[32];
-  systime_t StandardDate;
-  LONG       StandardBias;
-  WCHAR      DaylightName[32];
-  systime_t DaylightDate;
-  LONG       DaylightBias;
-} TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
+LONG       Bias;
+WCHAR      StandardName[32];
+systime_t StandardDate;
+LONG       StandardBias;
+WCHAR      DaylightName[32];
+systime_t DaylightDate;
+LONG       DaylightBias;
+} tzi_t, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
 
 */
 
@@ -332,45 +259,14 @@ int main ( ) {
     // for ( auto const & e : map )
     //  std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
 
-
-    TIME_ZONE_INFORMATION tzi1 = get_tzi ( "W. Australia Standard Time" );
+    tzi_t tzi1 = get_tzi ( "W. Australia Standard Time" );
 
     print_nixtime ( get_nixtime_in_tz ( tzi1 ) );
 
-    TIME_ZONE_INFORMATION const tzi2 = get_tzi ( "Pacific Standard Time" );
+    tzi_t const tzi2 = get_tzi ( "Pacific Standard Time" );
 
     print_nixtime ( get_nixtime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
 
     return EXIT_SUCCESS;
 }
-
-
-// 21::39
-
-/*
-    https://code.google.com/p/tzdata/
-
-    http://ipinfodb.com/timezonedatabase.php (SQL/CSV)
-
-    How to calculate the time in
-another zone
-
-    My local time is A
-    My zone time is m
-    Currently, my DST offset is Aofs
-
-    His/hers local time is B
-    His zone time is n
-    Currently, his DST offset is Bofs
-
-    Local time for B = A - m - Aofs + n + Bofs (modulo 24 hours)
-
-    Example:
-
-    A: USA, Los Angeles 14:20 local time, DST is on.
-    B: Australia, Sydney, DST is off.
-
-    Local time for B: 14:20 - -8:00 - 1:00 + 10:00 + 0 = 31:20; modulo 24 = 7:20 (the following day).
-
-*/

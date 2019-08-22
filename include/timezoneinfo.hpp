@@ -22,3 +22,28 @@
 // SOFTWARE.
 
 #pragma once
+
+#ifndef NOMINMAX
+#    define NOMINMAX
+#endif
+
+#ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#    define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#include <Windows.h>
+
+#include <string>
+
+using tzi_t = TIME_ZONE_INFORMATION;
+
+[[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
+[[nodiscard]] bool has_dst ( tzi_t const & tzi ) noexcept;
+
+[[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept;
+[[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept;
+[[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept;
