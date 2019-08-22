@@ -37,10 +37,17 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
-#include <nlohmann/json.hpp>
-
-// for convenience.
-using json = nlohmann::json;
+bool init ( ) {
+    if ( fs::exists ( g_timestamps_path ) )
+        load_timestamps ( );
+    if ( not fs::exists ( g_windows_zones_path ) or ( wintime ( ).i - g_timestamps.at ( "last_windowszones_download" ) ) >
+                                                        ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
+        download_windows_zones ( );
+        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
+        save_timestamps ( );
+    }
+    return true;
+}
 
 [[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
     wchar_t * value;
@@ -157,6 +164,27 @@ void load_timestamps ( ) {
     i >> j;
     i.close ( );
     g_timestamps = j.get<Timestamps> ( );
+}
+
+void save_to_file ( json const & j_, std::wstring const & name_ ) {
+    std::ofstream o ( g_app_data_path / ( name_ + L".json" ) );
+    o << std::setw ( 4 ) << j_ << std::endl;
+    o.flush ( );
+    o.close ( );
+}
+
+void load_from_file ( json & j_, std::wstring const & name_ ) {
+    std::ifstream i ( g_app_data_path / ( name_ + L".json" ) );
+    i >> j_;
+    i.close ( );
+}
+
+json load ( fs::path const & file_ ) {
+    json a;
+    std::ifstream i ( file_ );
+    i >> a;
+    i.close ( );
+    return a;
 }
 
 /*

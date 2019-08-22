@@ -51,7 +51,14 @@
 #include <map>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
+// for convenience.
+using json = nlohmann::json;
+
 namespace fs = std::filesystem;
+
+bool init ( );
 
 [[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept;
 
@@ -74,3 +81,7 @@ inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 
 void save_timestamps ( );
 void load_timestamps ( );
+
+void save_to_file ( json const & j_, std::wstring const & name_ );
+void load_from_file ( json & j_, std::wstring const & name_ );
+json load ( fs::path const & file_ );

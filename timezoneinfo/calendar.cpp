@@ -49,9 +49,9 @@
     } systime_t, *PSYSTEMTIME;
 */
 
-#define NS_SINCE_1970 116444736000000000ULL
-#define U_10M 10000000ULL
-#define S_10M 10000000LL
+#define NS_SINCE_1970 116'444'736'000'000'000ULL
+#define U_10M 10'000'000ULL
+#define S_10M 10'000'000LL
 
 nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept {
     return ( wintime_.i > NS_SINCE_1970 ? wintime_.i - NS_SINCE_1970 : NS_SINCE_1970 - wintime_.i ) / U_10M;
