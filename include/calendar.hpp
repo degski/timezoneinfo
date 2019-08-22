@@ -45,9 +45,8 @@
 
 #include <Windows.h>
 
+#include <cstdint>
 #include <ctime>
-
-#include <fmt/core.h>
 
 using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
 
@@ -116,6 +115,8 @@ void set_tm_utc ( std::tm * tm_ ) noexcept;
 void print_nixtime ( nixtime_t const rawtime_ ) noexcept;
 void print_wintime ( wintime_t const rawtime_ ) noexcept;
 void print_systime ( systime_t const & st_ ) noexcept;
+template<typename Stream>
+void print_systime ( Stream & os_, systime_t const & st_ ) noexcept;
 
 // Get the month day for the n_-th [ 1, 5 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
@@ -129,7 +130,6 @@ void print_systime ( systime_t const & st_ ) noexcept;
 
 template<typename Stream>
 [[maybe_unused]] Stream & operator<< ( Stream & os_, systime_t const & systime_ ) {
-    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", systime_.wYear, systime_.wMonth, systime_.wDayOfWeek, systime_.wDay,
-                         systime_.wHour, systime_.wMinute );
+    print_systime ( os_, systime_ );
     return os_;
 }
