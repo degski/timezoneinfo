@@ -92,7 +92,7 @@ inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February",
 [[nodiscard]] int today_monthday ( ) noexcept;
 
 [[nodiscard]] bool is_leap_year ( int const y_ ) noexcept;
-// Returns the number of days for the given m_ (month) in_ the given y_ (year).
+// Returns the number of days for the given m_ (month) in the given y_ (year).
 [[nodiscard]] int days_month ( int const y_, int const m_ ) noexcept;
 // Returns the number of days YTD.
 [[nodiscard]] int year_days ( int const y_, int const m_, int const d_ ) noexcept;
