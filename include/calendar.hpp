@@ -41,12 +41,15 @@
 
 #include <fmt/core.h>
 
-union wintime_t {
-    FILETIME filetime;
+using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
+
+using systime_t = SYSTEMTIME;
+using filtime_t = FILETIME;
+
+union alignas ( 8 ) wintime_t {
+    filtime_t filetime;
     std::uint64_t i;
 };
-
-using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
 
 [[nodiscard]] nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept;
 [[nodiscard]] wintime_t nixtime_to_wintime ( nixtime_t const nixtime_ ) noexcept;
@@ -54,20 +57,20 @@ using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
 [[nodiscard]] wintime_t wintime ( ) noexcept;
 [[nodiscard]] nixtime_t nixtime ( ) noexcept;
 
-[[nodiscard]] SYSTEMTIME wintime_to_systemtime ( wintime_t const wintime_ ) noexcept;
-[[nodiscard]] SYSTEMTIME nixtime_to_systemtime ( nixtime_t const nixtime_ ) noexcept;
+[[nodiscard]] systime_t systime ( ) noexcept;
+[[nodiscard]] systime_t localtime ( ) noexcept;
 
-[[nodiscard]] FILETIME wintime_to_filetime ( wintime_t const wintime_ ) noexcept;
-[[nodiscard]] FILETIME nixtime_to_filetime ( nixtime_t const nixtime_ ) noexcept;
+[[nodiscard]] systime_t wintime_to_systime ( wintime_t const wintime_ ) noexcept;
+[[nodiscard]] systime_t nixtime_to_systime ( nixtime_t const nixtime_ ) noexcept;
 
-[[nodiscard]] wintime_t systemtime_to_wintime ( SYSTEMTIME const & systemtime_ ) noexcept;
-[[nodiscard]] nixtime_t systemtime_to_nixtime ( SYSTEMTIME const & systemtime_ ) noexcept;
+[[nodiscard]] filtime_t wintime_to_filtime ( wintime_t const wintime_ ) noexcept;
+[[nodiscard]] filtime_t nixtime_to_filtime ( nixtime_t const nixtime_ ) noexcept;
 
-[[nodiscard]] wintime_t filetime_to_wintime ( FILETIME const filetime_ ) noexcept;
-[[nodiscard]] nixtime_t filetime_to_nixtime ( FILETIME const filetime_ ) noexcept;
+[[nodiscard]] wintime_t systime_to_wintime ( systime_t const & systime_ ) noexcept;
+[[nodiscard]] nixtime_t systime_to_nixtime ( systime_t const & systime_ ) noexcept;
 
-[[nodiscard]] std::tm systemtime_to_tm ( SYSTEMTIME const & systemtime_ ) noexcept;
-[[nodiscard]] SYSTEMTIME tm_to_systemtime ( std::tm const & tm_ ) noexcept;
+[[nodiscard]] std::tm systime_to_tm ( systime_t const & systime_ ) noexcept;
+[[nodiscard]] systime_t tm_to_systime ( std::tm const & tm_ ) noexcept;
 
 inline constexpr char const * dow[ 7 ]             = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 inline constexpr char const * day_of_the_week[ 7 ] = {
@@ -101,7 +104,11 @@ void set_tm_utc ( std::tm * tm_ ) noexcept;
 [[nodiscard]] bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept;
 
 [[nodiscard]] bool is_today_weekday ( ) noexcept;
-void print_date_time_t ( std::time_t const rawtime ) noexcept;
+
+void print_nixtime ( nixtime_t const rawtime_ ) noexcept;
+void print_wintime ( wintime_t const rawtime_ ) noexcept;
+void print_systime ( systime_t const & st_ ) noexcept;
+
 // Get the month day for the n_-th [ 1, 5 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
@@ -113,8 +120,8 @@ void print_date_time_t ( std::time_t const rawtime ) noexcept;
 [[nodiscard]] int local_utc_offset_minutes ( ) noexcept;
 
 template<typename Stream>
-[[maybe_unused]] Stream & operator<< ( Stream & os_, SYSTEMTIME const & systemtime_ ) {
-    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", systemtime_.wYear, systemtime_.wMonth, systemtime_.wDayOfWeek,
-                         systemtime_.wDay, systemtime_.wHour, systemtime_.wMinute );
+[[maybe_unused]] Stream & operator<< ( Stream & os_, systime_t const & systime_ ) {
+    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", systime_.wYear, systime_.wMonth, systime_.wDayOfWeek,
+                         systime_.wDay, systime_.wHour, systime_.wMinute );
     return os_;
 }

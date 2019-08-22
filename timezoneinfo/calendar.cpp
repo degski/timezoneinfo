@@ -29,6 +29,11 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <sax/iostream.hpp>
+
+#include <fmt/core.h>
+#include <fmt/format.h>
+
 /*
     typedef struct _SYSTEMTIME {
 
@@ -41,7 +46,7 @@
         WORD wSecond;
         WORD wMilliseconds;
 
-    } SYSTEMTIME, *PSYSTEMTIME;
+    } systime_t, *PSYSTEMTIME;
 */
 
 #define NS_SINCE_1970 116444736000000000ULL
@@ -64,46 +69,53 @@ wintime_t wintime ( ) noexcept {
     return wt;
 }
 
+systime_t systime ( ) noexcept {
+    systime_t st{};
+    GetSystemTime ( &st );
+    return st;
+}
+
+systime_t localtime ( ) noexcept {
+    systime_t lt{};
+    GetLocalTime ( &lt );
+    return lt;
+}
+
 nixtime_t nixtime ( ) noexcept { return wintime_to_nixtime ( wintime ( ) ); }
 
-SYSTEMTIME wintime_to_systemtime ( wintime_t const wintime_ ) noexcept {
-    SYSTEMTIME st{};
+systime_t wintime_to_systime ( wintime_t const wintime_ ) noexcept {
+    systime_t st{};
     FileTimeToSystemTime ( &wintime_.filetime, &st );
     return st;
 }
 
-SYSTEMTIME nixtime_to_systemtime ( nixtime_t const nixtime_ ) noexcept {
-    return wintime_to_systemtime ( nixtime_to_wintime ( nixtime_ ) );
+systime_t nixtime_to_systime ( nixtime_t const nixtime_ ) noexcept {
+    return wintime_to_systime ( nixtime_to_wintime ( nixtime_ ) );
 }
 
-wintime_t systemtime_to_wintime ( SYSTEMTIME const & systemtime_ ) noexcept {
+wintime_t systime_to_wintime ( systime_t const & systime_ ) noexcept {
     wintime_t wt;
-    SystemTimeToFileTime ( &systemtime_, &wt.filetime );
+    SystemTimeToFileTime ( &systime_, &wt.filetime );
     return wt;
 }
 
-nixtime_t systemtime_to_nixtime ( SYSTEMTIME const & systemtime_ ) noexcept {
-    return wintime_to_nixtime ( systemtime_to_wintime ( systemtime_ ) );
+nixtime_t systime_to_nixtime ( systime_t const & systime_ ) noexcept {
+    return wintime_to_nixtime ( systime_to_wintime ( systime_ ) );
 }
 
-FILETIME wintime_to_filetime ( wintime_t const wintime_ ) noexcept { return wintime_.filetime; }
-FILETIME nixtime_to_filetime ( nixtime_t const nixtime_ ) noexcept { return nixtime_to_wintime ( nixtime_ ).filetime; }
+filtime_t wintime_to_filtime ( wintime_t const wintime_ ) noexcept { return wintime_.filetime; }
+filtime_t nixtime_to_filtime ( nixtime_t const nixtime_ ) noexcept { return nixtime_to_wintime ( nixtime_ ).filetime; }
 
-wintime_t filetime_to_wintime ( FILETIME const filetime_ ) noexcept { return { filetime_ }; }
-nixtime_t filetime_to_nixtime ( FILETIME const filetime_ ) noexcept {
-    return wintime_to_nixtime ( filetime_to_wintime ( filetime_ ) );
-}
-
-std::tm systemtime_to_tm ( SYSTEMTIME const & systemtime_ ) noexcept {
+std::tm systime_to_tm ( systime_t const & systime_ ) noexcept {
     std::tm tmp{};
-    tmp.tm_sec                        = systemtime_.wSecond;
-    tmp.tm_min                        = systemtime_.wMinute;
-    tmp.tm_hour                       = systemtime_.wHour;
-    tmp.tm_mday                       = systemtime_.wDay;
-    tmp.tm_mon                        = systemtime_.wMonth - 1;
-    int const y_                      = systemtime_.wYear;
+    tmp.tm_sec                        = systime_.wSecond;
+    tmp.tm_min                        = systime_.wMinute;
+    tmp.tm_hour                       = systime_.wHour;
+    tmp.tm_mday                       = systime_.wDay;
+    tmp.tm_mon                        = systime_.wMonth - 1;
+    int const y_                      = systime_.wYear;
     tmp.tm_year                       = y_ - 1900;
-    tmp.tm_wday                       = systemtime_.wDayOfWeek;
+    tmp.tm_wday                       = systime_.wDayOfWeek;
     constexpr int const cum_dim[ 12 ] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
     tmp.tm_yday                       = cum_dim[ tmp.tm_mon ] + tmp.tm_mday +
                   ( ( tmp.tm_mon > 1 ) * ( ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ) ) );
@@ -111,8 +123,8 @@ std::tm systemtime_to_tm ( SYSTEMTIME const & systemtime_ ) noexcept {
     return tmp;
 }
 
-SYSTEMTIME tm_to_systemtime ( std::tm const & tm_ ) noexcept {
-    SYSTEMTIME tmp{};
+systime_t tm_to_systime ( std::tm const & tm_ ) noexcept {
+    systime_t tmp{};
     tmp.wYear         = tm_.tm_year + 1'900;
     tmp.wMonth        = tm_.tm_mon + 1;
     tmp.wDayOfWeek    = tm_.tm_wday;
@@ -132,10 +144,10 @@ SYSTEMTIME tm_to_systemtime ( std::tm const & tm_ ) noexcept {
 typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     LONG Bias;
     WCHAR StandardName[ 32 ];
-    SYSTEMTIME StandardDate;
+    systime_t StandardDate;
     LONG StandardBias;
     WCHAR DaylightName[ 32 ];
-    SYSTEMTIME DaylightDate;
+    systime_t DaylightDate;
     LONG DaylightBias;
     WCHAR TimeZoneKeyName[ 128 ];
     BOOLEAN DynamicDaylightTimeDisabled;
@@ -222,10 +234,15 @@ bool is_today_weekday ( ) noexcept {
     return not( dow == 0 or dow == 6 );
 }
 
-void print_date_time_t ( std::time_t const rawtime ) noexcept {
-    std::tm * ptm = std::gmtime ( &rawtime );
-    std::printf ( "%02i:%02i:%02i, %s %02i.%02i.%4i", ptm->tm_hour, ptm->tm_min, ptm->tm_sec, dow[ ptm->tm_wday ], ptm->tm_mday,
-                  ptm->tm_mon + 1, ptm->tm_year + 1'900 );
+void print_nixtime ( nixtime_t const rawtime_ ) noexcept { std::printf ( "%s", std::asctime ( std::gmtime ( &rawtime_ ) ) ); }
+
+void print_wintime ( wintime_t const rawtime_ ) noexcept { print_nixtime ( wintime_to_nixtime ( rawtime_ ) ); }
+
+void print_systime ( systime_t const & st_ ) noexcept {
+    // Thu Aug 22 13:41:12 2019
+    std::cout << fmt::format ( "{} {} {} {:02}:{:02}:{:02} {}", dow[ st_.wDayOfWeek ], moy[ st_.wMonth - 1 ], st_.wDay, st_.wHour,
+                               st_.wMinute, st_.wSecond, st_.wYear )
+              << nl;
 }
 
 int first_weekday_day ( int const y_, int const m_, int const w_ ) noexcept {

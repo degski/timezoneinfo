@@ -115,10 +115,10 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     // UTC = local time + bias.
     LONG Bias;
     WCHAR StandardName[ 32 ];
-    SYSTEMTIME StandardDate;
+    systime_t StandardDate;
     LONG StandardBias;
     WCHAR DaylightName[ 32 ];
-    SYSTEMTIME DaylightDate;
+    systime_t DaylightDate;
     LONG DaylightBias;
     WCHAR TimeZoneKeyName[ 128 ];
     BOOLEAN DynamicDaylightTimeDisabled;
@@ -131,8 +131,8 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
         LONG Bias;
         LONG StandardBias;
         LONG DaylightBias;
-        SYSTEMTIME StandardDate;
-        SYSTEMTIME DaylightDate;
+        systime_t StandardDate;
+        systime_t DaylightDate;
     };
     // Variables.
     HKEY key = nullptr;
@@ -201,7 +201,7 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     return tzi;
 }
 
-[[nodiscard]] std::tm get_tzi_tm ( SYSTEMTIME const & t ) noexcept {
+[[nodiscard]] std::tm get_tzi_tm ( systime_t const & t ) noexcept {
     std::tm date{};
     if ( t.wMonth ) {
         date.tm_year = today_year ( );
@@ -219,7 +219,7 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
 #    define timegm _mkgmtime
 #endif
 
-[[nodiscard]] std::time_t get_tzi_timegm ( SYSTEMTIME const & t ) noexcept {
+[[nodiscard]] std::time_t get_tzi_timegm ( systime_t const & t ) noexcept {
     if ( t.wMonth ) {
         std::tm date{};
         date.tm_year = today_year ( );
@@ -275,13 +275,13 @@ typedef struct _SYSTEMTIME {
     WORD wSecond;
     WORD wMilliseconds;
 
-} SYSTEMTIME, *PSYSTEMTIME;
+} systime_t, *PSYSTEMTIME;
 
 */
 
-[[nodiscard]] SYSTEMTIME get_tzi_systemtime ( SYSTEMTIME const & t ) noexcept {
+[[nodiscard]] systime_t get_tzi_systime ( systime_t const & t ) noexcept {
     if ( t.wMonth ) {
-        SYSTEMTIME date = t;
+        systime_t date = t;
         date.wYear      = today_year ( );
         date.wDay       = weekday_day ( t.wDay, date.wYear, t.wMonth, t.wDayOfWeek );
         date.wDayOfWeek = day_week ( date.wYear, t.wMonth, date.wDay );
@@ -289,15 +289,33 @@ typedef struct _SYSTEMTIME {
     return {};
 }
 
-/*
+[[nodiscard]] nixtime_t get_nixtime_in_tz ( TIME_ZONE_INFORMATION const & tzi_ ) noexcept {
+    systime_t system_time = systime ( ), local_time;
+    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
+    return systime_to_nixtime ( local_time );
+}
+
+[[nodiscard]] wintime_t get_wintime_in_tz ( TIME_ZONE_INFORMATION const & tzi_ ) noexcept {
+    systime_t system_time = systime ( ), local_time;
+    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
+    return systime_to_wintime ( local_time );
+}
+
+[[nodiscard]] systime_t get_systime_in_tz ( TIME_ZONE_INFORMATION const & tzi_ ) noexcept {
+    systime_t system_time = systime ( ), local_time;
+    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
+    return local_time;
+}
+
+    /*
 
 typedef struct _TIME_ZONE_INFORMATION {
   LONG       Bias;
   WCHAR      StandardName[32];
-  SYSTEMTIME StandardDate;
+  systime_t StandardDate;
   LONG       StandardBias;
   WCHAR      DaylightName[32];
-  SYSTEMTIME DaylightDate;
+  systime_t DaylightDate;
   LONG       DaylightBias;
 } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
 
@@ -314,38 +332,21 @@ int main ( ) {
     // for ( auto const & e : map )
     //  std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
 
-    /*
 
-    TIME_ZONE_INFORMATION tzi1 = get_tzi ( "GTB Standard Time" );
+    TIME_ZONE_INFORMATION tzi1 = get_tzi ( "W. Australia Standard Time" );
 
-    print_tzi ( tzi1 );
+    print_nixtime ( get_nixtime_in_tz ( tzi1 ) );
 
-    std::cout << nl;
-    */
+    TIME_ZONE_INFORMATION const tzi2 = get_tzi ( "Pacific Standard Time" );
 
-    TIME_ZONE_INFORMATION const tzi2 = get_tzi ( "GTB Standard Time" );
-
-    /*
-
-typedef struct _SYSTEMTIME {
-
-            WORD wYear;
-            WORD wMonth;
-            WORD wDayOfWeek;
-            WORD wDay;
-            WORD wHour;
-            WORD wMinute;
-            WORD wSecond;
-            WORD wMilliseconds;
-
-        } SYSTEMTIME, *PSYSTEMTIME;
-
-        */
-
-    // TzSpecificLocalTimeToSystemTime ( &tzi2, const SYSTEMTIME * lpLocalTime, LPSYSTEMTIME lpUniversalTime );
+    print_nixtime ( get_nixtime_in_tz ( tzi2 ) );
+    print_systime ( get_systime_in_tz ( tzi2 ) );
 
     return EXIT_SUCCESS;
 }
+
+
+// 21::39
 
 /*
     https://code.google.com/p/tzdata/
