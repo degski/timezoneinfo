@@ -74,8 +74,8 @@ int main ( ) {
 
     init ( );
 
-    // for ( auto const & e : g_iana )
-    //  std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
+    for ( auto const & e : g_iana )
+        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
