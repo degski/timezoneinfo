@@ -26,6 +26,18 @@
 #include <cstdint>
 #include <cstdlib>
 
+#ifndef NOMINMAX
+#    define NOMINMAX
+#endif
+
+#ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#    define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <Windows.h>
 
 #include <array>
@@ -51,16 +63,6 @@
 
 #include "calendar.hpp"
 #include "timezoneinfo.hpp"
-
-#if _WIN32
-#    if defined( _DEBUG )
-#        pragma comment( lib, "tinyxml2d.lib" )
-#        pragma comment( lib, "fmtd.lib" )
-#    else
-#        pragma comment( lib, "tinyxml2.lib" )
-#        pragma comment( lib, "fmt.lib" )
-#    endif
-#endif
 
 namespace fs = std::filesystem;
 

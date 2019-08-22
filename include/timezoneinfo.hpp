@@ -23,6 +23,16 @@
 
 #pragma once
 
+#if _WIN32
+#    if defined( _DEBUG )
+#        pragma comment( lib, "tinyxml2d.lib" )
+#        pragma comment( lib, "fmtd.lib" )
+#    else
+#        pragma comment( lib, "tinyxml2.lib" )
+#        pragma comment( lib, "fmt.lib" )
+#    endif
+#endif
+
 #ifndef NOMINMAX
 #    define NOMINMAX
 #endif

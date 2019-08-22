@@ -23,6 +23,14 @@
 
 #pragma once
 
+#if _WIN32
+#    if defined( _DEBUG )
+#        pragma comment( lib, "fmtd.lib" )
+#    else
+#        pragma comment( lib, "fmt.lib" )
+#    endif
+#endif
+
 #ifndef NOMINMAX
 #    define NOMINMAX
 #endif
@@ -121,7 +129,7 @@ void print_systime ( systime_t const & st_ ) noexcept;
 
 template<typename Stream>
 [[maybe_unused]] Stream & operator<< ( Stream & os_, systime_t const & systime_ ) {
-    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", systime_.wYear, systime_.wMonth, systime_.wDayOfWeek,
-                         systime_.wDay, systime_.wHour, systime_.wMinute );
+    os_ << fmt::format ( "{:04} {:02} {:1} {:02} {:02}:{:02}", systime_.wYear, systime_.wMonth, systime_.wDayOfWeek, systime_.wDay,
+                         systime_.wHour, systime_.wMinute );
     return os_;
 }
