@@ -47,11 +47,13 @@
 
 namespace fs = std::filesystem;
 
-struct Info {
+using IanaMapKey  = std::string;
+
+struct IanaMapValue {
     std::string name, code;
 };
 
-using IanaMap = std::map<std::string, Info>;
+using IanaMap = std::map<IanaMapKey, IanaMapValue>;
 
 [[nodiscard]] IanaMap build_iana_to_windowszones_map ( );
 

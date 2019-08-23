@@ -63,7 +63,6 @@ union alignas ( 8 ) wintime_t {
 
 [[nodiscard]] wintime_t wintime ( ) noexcept;
 [[nodiscard]] nixtime_t nixtime ( ) noexcept;
-
 [[nodiscard]] systime_t systime ( ) noexcept;
 [[nodiscard]] systime_t localtime ( ) noexcept;
 
