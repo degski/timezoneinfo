@@ -73,15 +73,26 @@ inline Timestamps g_timestamps;
 inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 
 [[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
+[[nodiscard]] tzi_t const & get_tzi_utc ( ) noexcept;
+
 [[nodiscard]] bool has_dst ( tzi_t const & tzi ) noexcept;
 
+/*
 [[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_, systime_t const & system_time_ ) noexcept;
 [[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_, wintime_t const & wintime_ ) noexcept;
 [[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_, nixtime_t const & nixtime_ ) noexcept;
+*/
 
+// Return time-zone specific current local systime.
 [[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept;
+// Return time-zone specific current local wintime.
 [[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept;
+// Return time-zone specific current local nixtime.
 [[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept;
+
+[[nodiscard]] systime_t get_systime_in_tz ( systime_t const & system_time_ ) noexcept;
+[[nodiscard]] wintime_t get_wintime_in_tz ( wintime_t const & wintime_ ) noexcept;
+[[nodiscard]] nixtime_t get_nixtime_in_tz ( nixtime_t const & nixtime_ ) noexcept;
 
 void save_timestamps ( );
 void load_timestamps ( );

@@ -265,13 +265,24 @@ int days_since ( int const y_, int const m_, int const d_ ) noexcept {
     return ( int ) std::difftime ( now, then ) / ( 24 * 60 * 60 );
 }
 
-// Return epoch from date.
-std::time_t date_to_epoch ( int const y_, int const m_, int const d_ ) noexcept {
+int days_since_winepoch ( ) noexcept { return static_cast<int> ( wintime ( ).i / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ); }
+
+// Return unix time from date.
+nixtime_t date_to_nixepoch ( int const y_, int const m_, int const d_ ) noexcept {
     std::tm tm{};
     tm.tm_year = y_ - 1900;
     tm.tm_mon  = m_ - 1;
     tm.tm_mday = d_;
     return timegm ( &tm );
+}
+
+// Return windows time from date.
+wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept {
+    systime_t st{};
+    st.wYear = y_;
+    st.wMonth = m_;
+    st.wDay   = d_;
+    return systime_to_wintime ( st );
 }
 
 int local_utc_offset_minutes ( ) noexcept {

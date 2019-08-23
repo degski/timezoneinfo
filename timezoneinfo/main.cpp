@@ -79,12 +79,19 @@ int main ( ) {
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
-    print_nixtime ( get_nixtime_in_tz ( tzi1 ) );
+    print_wintime ( get_wintime_in_tz ( tzi1 ) );
 
     tzi_t const tzi2 = get_tzi ( "America/Los_Angeles" );
 
-    print_nixtime ( get_nixtime_in_tz ( tzi2 ) );
+    nixtime_t const nt = get_nixtime_in_tz ( tzi2 );
+
+    print_nixtime ( nt );
+    print_wintime ( get_wintime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
+
+    Sleep ( 15000 );
+
+    print_nixtime ( get_nixtime_in_tz ( nt ) );
 
     return EXIT_SUCCESS;
 }

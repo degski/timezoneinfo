@@ -122,10 +122,15 @@ void print_systime ( Stream & os_, systime_t const & st_ ) noexcept;
 // Get the month day for the n_-th [ 1, 5 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-[[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
 
-// Return epoch (unix-time) from date.
-[[nodiscard]] std::time_t date_to_epoch ( int const y_, int const m_, int const d_ ) noexcept;
+[[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
+[[nodiscard]] int days_since_winepoch ( ) noexcept;
+
+
+// Return unix time from date.
+[[nodiscard]] nixtime_t date_to_nixepoch ( int const y_, int const m_, int const d_ ) noexcept;
+// Return windows time from date.
+[[nodiscard]] wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept;
 
 [[nodiscard]] int local_utc_offset_minutes ( ) noexcept;
 

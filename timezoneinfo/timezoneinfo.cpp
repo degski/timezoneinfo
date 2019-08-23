@@ -134,6 +134,11 @@ tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     return tzi;
 }
 
+tzi_t const & get_tzi_utc ( ) noexcept {
+    static tzi_t const utc = { 0, TEXT ( "Coordinated Universal Time" ), systime_t{}, 0, TEXT ( "Coordinated Universal Time" ), systime_t{}, 0 };
+    return utc;
+}
+
 bool has_dst ( tzi_t const & tzi ) noexcept { return tzi.StandardDate.wMonth; }
 
 systime_t get_systime_in_tz ( tzi_t const & tzi_, systime_t const & system_time_ ) noexcept {
@@ -161,6 +166,14 @@ wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept {
 nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept {
     return systime_to_nixtime ( get_systime_in_tz ( tzi_ ) );
 }
+
+systime_t get_systime_in_tz ( systime_t const & system_time_ ) noexcept {
+    return get_systime_in_tz ( get_tzi_utc ( ), system_time_ );
+}
+
+wintime_t get_wintime_in_tz ( wintime_t const & wintime_ ) noexcept { return get_wintime_in_tz ( get_tzi_utc ( ), wintime_ ); }
+
+nixtime_t get_nixtime_in_tz ( nixtime_t const & nixtime_ ) noexcept { return get_nixtime_in_tz ( get_tzi_utc ( ), nixtime_ ); }
 
 int today_year_in_tz ( tzi_t const & tzi_ ) noexcept { return get_systime_in_tz ( tzi_ ).wYear; }
 int today_month_in_tz ( tzi_t const & tzi_ ) noexcept { return get_systime_in_tz ( tzi_ ).wMonth; }
