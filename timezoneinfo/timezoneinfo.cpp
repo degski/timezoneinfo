@@ -70,7 +70,7 @@ tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     // Variables.
     HKEY key = nullptr;
     DWORD data_length;
-    REG_TZI_FORMAT reg_tzi_format{};
+    REG_TZI_FORMAT reg_tzi{};
     tzi_t tzi{};
     // Create URI.
     std::wstring const desc = fmt::to_wstring ( g_iana.at ( iana_ ).name );
@@ -78,21 +78,21 @@ tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     auto result             = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_READ, &key );
     assert ( ERROR_SUCCESS == result );
     data_length = sizeof ( REG_TZI_FORMAT );
-    RegQueryValueEx ( key, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi_format, &data_length );
-    tzi.Bias    = reg_tzi_format.Bias; // UTC = local time + bias.
+    RegQueryValueEx ( key, TEXT ( "TZI" ), NULL, NULL, ( LPBYTE ) &reg_tzi, &data_length );
+    tzi.Bias    = reg_tzi.Bias; // UTC = local time + bias.
     data_length = 64;
     RegQueryValueEx ( key, TEXT ( "Std" ), NULL, NULL, ( LPBYTE ) &tzi.StandardName, &data_length );
-    if ( reg_tzi_format.StandardDate.wMonth ) {
-        tzi.StandardDate = reg_tzi_format.StandardDate;
-        tzi.StandardBias = reg_tzi_format.StandardBias;
+    if ( reg_tzi.StandardDate.wMonth ) {
+        tzi.StandardDate = reg_tzi.StandardDate;
+        tzi.StandardBias = reg_tzi.StandardBias;
     }
-    if ( reg_tzi_format.DaylightDate.wMonth ) {
+    if ( reg_tzi.DaylightDate.wMonth ) {
         data_length = 64;
         RegQueryValueEx ( key, TEXT ( "Dlt" ), NULL, NULL, ( LPBYTE ) &tzi.DaylightName, &data_length );
-        tzi.DaylightDate = reg_tzi_format.DaylightDate;
-        tzi.DaylightBias = reg_tzi_format.DaylightBias;
+        tzi.DaylightDate = reg_tzi.DaylightDate;
+        tzi.DaylightBias = reg_tzi.DaylightBias;
     }
-    assert ( not reg_tzi_format.StandardDate.wMonth == not reg_tzi_format.DaylightDate.wMonth );
+    assert ( not reg_tzi.StandardDate.wMonth == not reg_tzi.DaylightDate.wMonth );
     RegCloseKey ( key );
 
 #if 0
@@ -112,17 +112,17 @@ tzi_t get_tzi ( std::string const & iana_ ) noexcept {
             RegQueryValueEx ( key, TEXT ( "FirstEntry" ), NULL, NULL, ( LPBYTE ) &first_year, &data_length );
 
             data_length = sizeof ( REG_TZI_FORMAT );
-            RegQueryValueEx ( key, fmt::to_wstring ( current_year ).c_str ( ), NULL, NULL, ( LPBYTE ) &reg_tzi_format,
+            RegQueryValueEx ( key, fmt::to_wstring ( current_year ).c_str ( ), NULL, NULL, ( LPBYTE ) &reg_tzi,
                               &data_length );
 
-            tzi.Bias         = reg_tzi_format.Bias; // UTC = local time + bias
-            if ( reg_tzi_format.StandardDate.wMonth ) {
-                tzi.StandardDate = reg_tzi_format.StandardDate;
-                tzi.StandardBias = reg_tzi_format.StandardBias;
+            tzi.Bias         = reg_tzi.Bias; // UTC = local time + bias
+            if ( reg_tzi.StandardDate.wMonth ) {
+                tzi.StandardDate = reg_tzi.StandardDate;
+                tzi.StandardBias = reg_tzi.StandardBias;
             }
-            if ( reg_tzi_format.DaylightDate.wMonth ) {
-                tzi.DaylightDate = reg_tzi_format.DaylightDate;
-                tzi.DaylightBias = reg_tzi_format.DaylightBias;
+            if ( reg_tzi.DaylightDate.wMonth ) {
+                tzi.DaylightDate = reg_tzi.DaylightDate;
+                tzi.DaylightBias = reg_tzi.DaylightBias;
             }
         }
     }
