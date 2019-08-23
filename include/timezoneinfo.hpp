@@ -94,6 +94,11 @@ inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 [[nodiscard]] wintime_t get_wintime_in_tz ( wintime_t const & wintime_ ) noexcept;
 [[nodiscard]] nixtime_t get_nixtime_in_tz ( nixtime_t const & nixtime_ ) noexcept;
 
+// Return system time from date in UTC.
+[[nodiscard]] systime_t date_to_systime ( int const y_, int const m_, int const d_ ) noexcept;
+// Return windows time from date in UTC.
+[[nodiscard]] wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept;
+
 void save_timestamps ( );
 void load_timestamps ( );
 

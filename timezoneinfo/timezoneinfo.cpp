@@ -215,6 +215,20 @@ json load ( fs::path const & file_ ) {
     return a;
 }
 
+// Return system time from date in UTC.
+systime_t date_to_systime ( int const y_, int const m_, int const d_ ) noexcept {
+    systime_t st{};
+    st.wYear  = y_;
+    st.wMonth = m_;
+    st.wDay   = d_;
+    return get_systime_in_tz ( st );
+}
+
+// Return windows time from date in UTC.
+wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept {
+    return systime_to_wintime ( date_to_systime ( y_, m_, d_ ) );
+}
+
 /*
 
 typedef struct _SYSTEMTIME {

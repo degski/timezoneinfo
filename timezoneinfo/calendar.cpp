@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 #include "calendar.hpp"
+#include "timezoneinfo.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -227,7 +228,9 @@ bool is_today_weekday ( ) noexcept {
 
 void print_nixtime ( nixtime_t const rawtime_ ) noexcept { std::printf ( "%s", std::asctime ( std::gmtime ( &rawtime_ ) ) ); }
 
-void print_wintime ( wintime_t const rawtime_ ) noexcept { print_nixtime ( wintime_to_nixtime ( rawtime_ ) ); }
+void print_wintime ( wintime_t const rawtime_ ) noexcept {
+    print_systime ( wintime_to_systime ( get_wintime_in_tz ( rawtime_ ) ) );
+}
 
 void print_systime ( systime_t const & st_ ) noexcept {
     print_systime ( std::cout, st_ );
@@ -274,15 +277,6 @@ nixtime_t date_to_nixepoch ( int const y_, int const m_, int const d_ ) noexcept
     tm.tm_mon  = m_ - 1;
     tm.tm_mday = d_;
     return timegm ( &tm );
-}
-
-// Return windows time from date.
-wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept {
-    systime_t st{};
-    st.wYear = y_;
-    st.wMonth = m_;
-    st.wDay   = d_;
-    return systime_to_wintime ( st );
 }
 
 int local_utc_offset_minutes ( ) noexcept {

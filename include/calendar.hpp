@@ -129,8 +129,6 @@ void print_systime ( Stream & os_, systime_t const & st_ ) noexcept;
 
 // Return unix time from date.
 [[nodiscard]] nixtime_t date_to_nixepoch ( int const y_, int const m_, int const d_ ) noexcept;
-// Return windows time from date.
-[[nodiscard]] wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept;
 
 [[nodiscard]] int local_utc_offset_minutes ( ) noexcept;
 

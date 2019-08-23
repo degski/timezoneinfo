@@ -89,9 +89,11 @@ int main ( ) {
     print_wintime ( get_wintime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
 
-    Sleep ( 15000 );
+    wintime_t wt = date_to_winepoch ( 1605, 8, 22 );
 
-    print_nixtime ( get_nixtime_in_tz ( nt ) );
+    print_wintime ( wt );
+
+    std::cout << days_since_winepoch ( ) << nl;
 
     return EXIT_SUCCESS;
 }
