@@ -158,11 +158,9 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
 #    define timegm _mkgmtime
 #endif
 
-int today_year ( ) noexcept {
-    std::time_t const now      = std::time ( nullptr );
-    std::tm const * const date = std::gmtime ( &now );
-    return date->tm_year + 1'900;
-}
+int today_year ( ) noexcept { return systime ( ).wYear; }
+int today_month ( ) noexcept { return systime ( ).wMonth; }
+int today_day ( ) noexcept { return systime ( ).wDay; }
 
 bool is_leap_year ( int const y_ ) noexcept { return ( ( y_ % 4 == 0 ) and ( y_ % 100 != 0 ) ) or ( y_ % 400 == 0 ); }
 
@@ -210,28 +208,21 @@ std::time_t last_weekday_time ( int const y_, int const m_, int const w_ ) noexc
     return timegm ( &date );
 }
 
-void set_tm_utc ( std::tm * tm_ ) noexcept {
-    std::time_t rawtime = std::time ( nullptr );
-    tm_                 = std::gmtime ( &rawtime );
-}
-
-bool is_weekday ( int const y_, int const m_, int const d_ ) noexcept {
+bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept {
     int const dow = day_week ( y_, m_, d_ );
-    return not( dow == 0 or dow == 6 );
+    return dow == 0 or dow == 6;
 }
 
-bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept { return not is_weekday ( y_, m_, d_ ); }
+bool is_weekday ( int const y_, int const m_, int const d_ ) noexcept { return not is_weekend ( y_, m_, d_ ); }
 
-int today_monthday ( ) noexcept {
-    std::time_t now = std::time ( nullptr );
-    std::tm date;
-    localtime_s ( &date, &now );
-    return date.tm_wday;
+bool is_today_weekend ( ) noexcept {
+    systime_t const st = systime ( );
+    return is_weekend ( st.wYear, st.wMonth, st.wDay );
 }
 
 bool is_today_weekday ( ) noexcept {
-    int const dow = today_monthday ( );
-    return not( dow == 0 or dow == 6 );
+    systime_t const st = systime ( );
+    return is_weekday ( st.wYear, st.wMonth, st.wDay );
 }
 
 void print_nixtime ( nixtime_t const rawtime_ ) noexcept { std::printf ( "%s", std::asctime ( std::gmtime ( &rawtime_ ) ) ); }

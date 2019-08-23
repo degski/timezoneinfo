@@ -86,10 +86,10 @@ inline constexpr char const * day_of_the_week[ 7 ] = {
 inline constexpr char const * moy[ 12 ] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February", "March",     "April",   "May",      "June",
                                                           "July",    "August",   "September", "October", "November", "December" };
-// Returns the year.
+// Returns the year (UTC).
 [[nodiscard]] int today_year ( ) noexcept;
-// Returns todays day in the month.
-[[nodiscard]] int today_monthday ( ) noexcept;
+[[nodiscard]] int today_month ( ) noexcept;
+[[nodiscard]] int today_day ( ) noexcept;
 
 [[nodiscard]] bool is_leap_year ( int const y_ ) noexcept;
 // Returns the number of days for the given m_ (month) in the given y_ (year).
@@ -106,10 +106,11 @@ inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February",
 [[nodiscard]] int last_weekday ( int y_, int m_ ) noexcept;
 // Return the first non-weekend day [a weekday, as no good antonym exists] in the month in UTC.
 [[nodiscard]] std::time_t last_weekday_time ( int const y_, int const m_, int const w_ ) noexcept;
-void set_tm_utc ( std::tm * tm_ ) noexcept;
+
 [[nodiscard]] bool is_weekday ( int const y_, int const m_, int const d_ ) noexcept;
 [[nodiscard]] bool is_weekend ( int const y_, int const m_, int const d_ ) noexcept;
 
+[[nodiscard]] bool is_today_weekend ( ) noexcept;
 [[nodiscard]] bool is_today_weekday ( ) noexcept;
 
 void print_nixtime ( nixtime_t const rawtime_ ) noexcept;

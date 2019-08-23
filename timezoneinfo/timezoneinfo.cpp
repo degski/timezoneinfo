@@ -49,7 +49,7 @@ bool init ( ) {
     return true;
 }
 
-[[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
+fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
     wchar_t * value;
     std::size_t len;
     _wdupenv_s ( &value, &len, L"USERPROFILE" );
@@ -58,7 +58,7 @@ bool init ( ) {
     return return_value;
 }
 
-[[nodiscard]] tzi_t get_tzi ( std::string const & iana_ ) noexcept {
+tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     // The registry entry for TZI.
     struct REG_TZI_FORMAT {
         LONG Bias;
@@ -134,21 +134,36 @@ bool init ( ) {
     return tzi;
 }
 
-[[nodiscard]] bool has_dst ( tzi_t const & tzi ) noexcept { return tzi.StandardDate.wMonth; }
+bool has_dst ( tzi_t const & tzi ) noexcept { return tzi.StandardDate.wMonth; }
 
-[[nodiscard]] systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept {
-    systime_t system_time = systime ( ), local_time;
-    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time, &local_time );
+systime_t get_systime_in_tz ( tzi_t const & tzi_, systime_t const & system_time_ ) noexcept {
+    systime_t local_time;
+    SystemTimeToTzSpecificLocalTime ( &tzi_, &system_time_, &local_time );
     return local_time;
 }
 
-[[nodiscard]] wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept {
+wintime_t get_wintime_in_tz ( tzi_t const & tzi_, wintime_t const & wintime_ ) noexcept {
+    return systime_to_wintime ( get_systime_in_tz ( tzi_, wintime_to_systime ( wintime_ ) ) );
+}
+
+nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_, nixtime_t const & nixtime_ ) noexcept {
+    return systime_to_nixtime ( get_systime_in_tz ( tzi_, nixtime_to_systime ( nixtime_ ) ) );
+}
+
+systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept {
+    return get_systime_in_tz ( tzi_, systime ( ) );
+}
+
+wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept {
     return systime_to_wintime ( get_systime_in_tz ( tzi_ ) );
 }
 
-[[nodiscard]] nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept {
-    return wintime_to_nixtime ( get_wintime_in_tz ( tzi_ ) );
+nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept {
+    return systime_to_nixtime ( get_systime_in_tz ( tzi_ ) );
 }
+
+int today_year_in_tz ( tzi_t const & tzi_ ) noexcept { return get_systime_in_tz ( tzi_ ).wYear; }
+int today_month_in_tz ( tzi_t const & tzi_ ) noexcept { return get_systime_in_tz ( tzi_ ).wMonth; }
 
 void save_timestamps ( ) {
     json const j = g_timestamps;
