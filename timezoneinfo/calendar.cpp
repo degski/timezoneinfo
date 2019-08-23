@@ -258,35 +258,6 @@ int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexc
 
 int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { return weekday_day ( 5, y_, m_, w_ ); }
 
-int days_since ( int const y_, int const m_, int const d_ ) noexcept {
-    std::time_t now = std::time ( nullptr );
-    std::tm date{};
-    date.tm_year     = y_ - 1'900;
-    date.tm_mon      = m_ - 1;
-    date.tm_mday     = d_;
-    std::time_t then = std::mktime ( &date );
-    return ( int ) std::difftime ( now, then ) / ( 24 * 60 * 60 );
-}
-
-int days_since_winepoch ( ) noexcept { return static_cast<int> ( wintime ( ).i / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ); }
-
-// Return unix time from date.
-nixtime_t date_to_nixepoch ( int const y_, int const m_, int const d_ ) noexcept {
-    std::tm tm{};
-    tm.tm_year = y_ - 1900;
-    tm.tm_mon  = m_ - 1;
-    tm.tm_mday = d_;
-    return timegm ( &tm );
-}
-
-int local_utc_offset_minutes ( ) noexcept {
-    std::time_t t  = std::time ( nullptr );
-    std::tm * locg = std::localtime ( &t );
-    std::tm locl;
-    std::memcpy ( &locl, locg, sizeof ( std::tm ) );
-    return static_cast<int> ( timegm ( locg ) - mktime ( &locl ) ) / 60;
-}
-
 #if _WIN32
 #    undef timegm
 #endif

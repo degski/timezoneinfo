@@ -225,9 +225,27 @@ systime_t date_to_systime ( int const y_, int const m_, int const d_ ) noexcept 
 }
 
 // Return windows time from date in UTC.
-wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept {
+wintime_t date_to_wintime ( int const y_, int const m_, int const d_ ) noexcept {
     return systime_to_wintime ( date_to_systime ( y_, m_, d_ ) );
 }
+
+int days_since ( int const y_, int const m_, int const d_ ) noexcept {
+    return static_cast<int> ( ( get_wintime_in_tz ( wintime ( ) ).i - date_to_wintime ( y_, m_, d_ ).i ) / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) );
+}
+
+int days_since_winepoch ( ) noexcept {
+    return static_cast<int> ( get_wintime_in_tz ( wintime ( ) ).i / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) );
+}
+
+std::int64_t local_utc_offset_minutes ( ) noexcept {
+    wintime_t ft = wintime ( ), lt;
+    FileTimeToLocalFileTime ( &ft.filetime, &lt.filetime );
+    if ( ft.i > lt.i )
+        return +static_cast<std::int64_t> ( ( ft.i - lt.i ) / ( 60ULL * 10'000'000ULL ) );
+    else
+        return -static_cast<std::int64_t> ( ( lt.i - ft.i ) / ( 60ULL * 10'000'000ULL ) );
+}
+
 
 /*
 

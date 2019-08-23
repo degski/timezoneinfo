@@ -89,11 +89,8 @@ int main ( ) {
     print_wintime ( get_wintime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
 
-    wintime_t wt = date_to_winepoch ( 1605, 8, 22 );
 
-    print_wintime ( wt );
-
-    std::cout << days_since_winepoch ( ) << nl;
+    std::cout << local_utc_offset_minutes ( ) << nl;
 
     return EXIT_SUCCESS;
 }

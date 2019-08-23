@@ -97,7 +97,12 @@ inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 // Return system time from date in UTC.
 [[nodiscard]] systime_t date_to_systime ( int const y_, int const m_, int const d_ ) noexcept;
 // Return windows time from date in UTC.
-[[nodiscard]] wintime_t date_to_winepoch ( int const y_, int const m_, int const d_ ) noexcept;
+[[nodiscard]] wintime_t date_to_wintime ( int const y_, int const m_, int const d_ ) noexcept;
+
+[[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
+[[nodiscard]] int days_since_winepoch ( ) noexcept;
+
+[[nodiscard]] std::int64_t local_utc_offset_minutes ( ) noexcept;
 
 void save_timestamps ( );
 void load_timestamps ( );

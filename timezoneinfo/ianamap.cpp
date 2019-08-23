@@ -23,6 +23,8 @@
 
 #include "ianamap.hpp"
 
+#include "timezoneinfo.hpp"
+
 #include <fstream>
 #include <map>
 #include <sax/iostream.hpp>

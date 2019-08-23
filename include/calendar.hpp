@@ -123,15 +123,6 @@ void print_systime ( Stream & os_, systime_t const & st_ ) noexcept;
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 
-[[nodiscard]] int days_since ( int const y_, int const m_, int const d_ ) noexcept;
-[[nodiscard]] int days_since_winepoch ( ) noexcept;
-
-
-// Return unix time from date.
-[[nodiscard]] nixtime_t date_to_nixepoch ( int const y_, int const m_, int const d_ ) noexcept;
-
-[[nodiscard]] int local_utc_offset_minutes ( ) noexcept;
-
 template<typename Stream>
 [[maybe_unused]] Stream & operator<< ( Stream & os_, systime_t const & systime_ ) {
     print_systime ( os_, systime_ );

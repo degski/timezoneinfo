@@ -40,8 +40,6 @@
 #    pragma comment( lib, "libcurlpp.lib" )
 #endif
 
-#include "timezoneinfo.hpp"
-
 #include <filesystem>
 #include <map>
 #include <sax/stl.hpp>
