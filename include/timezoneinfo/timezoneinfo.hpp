@@ -96,9 +96,10 @@ void print_wintime ( wintime_t const & rawtime_ ) noexcept;
 
 template<typename Stream>
 void print_systime ( Stream & os_, systime_t const & system_time_ ) noexcept {
-    // Thu Aug 22 13:41:12 2019
-    os_ << fmt::format ( "{} {} {:2} {:02}:{:02}:{:02} {}", dow[ system_time_.wDayOfWeek ], moy[ system_time_.wMonth - 1 ],
-                         system_time_.wDay, system_time_.wHour, system_time_.wMinute, system_time_.wSecond, system_time_.wYear );
+    // Thu Aug 22 13:41:12.256 2019
+    os_ << fmt::format ( "{} {} {:2} {:02}:{:02}:{:02}.{:03} {}", dow[ system_time_.wDayOfWeek ], moy[ system_time_.wMonth - 1 ],
+                         system_time_.wDay, system_time_.wHour, system_time_.wMinute, system_time_.wSecond,
+                         system_time_.wMilliseconds, system_time_.wYear );
 }
 
 template<typename Stream>

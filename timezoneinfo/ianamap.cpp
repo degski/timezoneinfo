@@ -64,8 +64,8 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
         auto const territory = element_to_cstr ( element, "territory" );
         if ( std::strncmp ( "001", territory, 3 ) ) {
             for ( auto & ia : sax::string_split ( std::string_view{ element_to_cstr ( element, "type" ) }, " " ) ) {
-                if ( "Etc" == ia.substr ( 0u, 3u ) )
-                    ia = ia.substr ( 4u, ia.size ( ) - 4 );
+                // if ( "Etc" == ia.substr ( 0u, 3u ) )
+                //     ia = ia.substr ( 4u, ia.size ( ) - 4 );
                 IanaMapKey ais{ ia };
                 auto it = map.find ( ais );
                 if ( std::end ( map ) == it )

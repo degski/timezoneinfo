@@ -46,8 +46,11 @@ int main ( ) {
 
     init ( );
 
+    std::cout << g_iana.size ( ) << nl;
+
     for ( auto const & e : g_iana )
-        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
+        std::cout << e.first << nl;
+    // " - " << e.second.name << " - " << e.second.code << nl;
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
@@ -65,7 +68,7 @@ int main ( ) {
 
     std::cout << t1 << nl;
 
-    t1.set_offset ( -180 );
+    t1.set_utc ( );
 
     std::cout << t1 << nl;
 

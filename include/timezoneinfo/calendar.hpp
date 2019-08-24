@@ -56,19 +56,18 @@ using filtime_t = FILETIME;
 
 struct alignas ( 8 ) wintime_t {
 
-    filtime_t * data ( ) noexcept { return reinterpret_cast<filtime_t *> ( this ); }
-    filtime_t const * data ( ) const noexcept { return reinterpret_cast<filtime_t const *> ( this ); }
+    filtime_t * data ( ) noexcept { return &value; }
+    filtime_t const * data ( ) const noexcept { return &value; }
 
     inline std::uint64_t & as_uint64 ( ) noexcept { return *reinterpret_cast<std::uint64_t *> ( this ); }
     inline std::uint64_t const & as_uint64 ( ) const noexcept { return *reinterpret_cast<std::uint64_t const *> ( this ); }
 
-    void set_utc ( ) noexcept { *reinterpret_cast<char *> ( this ) = char{ 0 }; }
-
-    void set_offset ( int const minutes_ ) noexcept {
-        assert ( not( minutes_ % 15 ) );
-        *reinterpret_cast<char *> ( this ) = static_cast<char> ( minutes_ / 15 );
+    void set_utc ( ) noexcept {
+        as_uint64 ( ) &= 0b1111'1111'1111'1111'1111'1111'1111'1111'1111'1111'1111'1111'1111'1000'0000'0000;
     }
-    int get_offset ( ) const noexcept { return static_cast<int> ( *reinterpret_cast<char const *> ( this ) ) * 15; }
+
+    void set_offset ( int const minutes_ ) noexcept { *reinterpret_cast<short *> ( this ) = static_cast<short> ( minutes_ ); }
+    int get_offset ( ) const noexcept { return static_cast<int> ( *reinterpret_cast<short const *> ( this ) ); }
 
     private:
     filtime_t value{};
