@@ -63,13 +63,13 @@ int main ( ) {
 
     wintime_t t1 = wintime ( );
 
-    wintime_t t2 = wintime ( );
+    std::cout << t1 << nl;
 
-    auto d = t2.i - t1.i;
+    t1.set_offset ( -180 );
 
     std::cout << t1 << nl;
-    std::cout << t2 << nl;
-    std::cout << d << nl;
+
+    std::cout << t1.get_offset ( ) << nl;
 
     return EXIT_SUCCESS;
 }

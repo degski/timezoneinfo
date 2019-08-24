@@ -50,7 +50,7 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
     tinyxml2::XMLDocument doc;
     if ( not fs::exists ( g_windowszones_path ) ) {
         download_windowszones ( );
-        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
+        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).as_uint64 ( ) );
         save_timestamps ( );
     }
     doc.LoadFile ( g_windowszones_path.string ( ).c_str ( ) );

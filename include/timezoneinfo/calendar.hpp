@@ -45,6 +45,7 @@
 
 #include <Windows.h>
 
+#include <cassert>
 #include <cstdint>
 #include <ctime>
 
@@ -53,9 +54,24 @@ using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
 using systime_t = SYSTEMTIME;
 using filtime_t = FILETIME;
 
-union alignas ( 8 ) wintime_t {
-    filtime_t filetime;
-    std::uint64_t i;
+struct alignas ( 8 ) wintime_t {
+
+    filtime_t * data ( ) noexcept { return reinterpret_cast<filtime_t *> ( this ); }
+    filtime_t const * data ( ) const noexcept { return reinterpret_cast<filtime_t const *> ( this ); }
+
+    inline std::uint64_t & as_uint64 ( ) noexcept { return *reinterpret_cast<std::uint64_t *> ( this ); }
+    inline std::uint64_t const & as_uint64 ( ) const noexcept { return *reinterpret_cast<std::uint64_t const *> ( this ); }
+
+    void set_utc ( ) noexcept { *reinterpret_cast<char *> ( this ) = char{ 0 }; }
+
+    void set_offset ( int const minutes_ ) noexcept {
+        assert ( not( minutes_ % 15 ) );
+        *reinterpret_cast<char *> ( this ) = static_cast<char> ( minutes_ / 15 );
+    }
+    int get_offset ( ) const noexcept { return static_cast<int> ( *reinterpret_cast<char const *> ( this ) ) * 15; }
+
+    private:
+    filtime_t value{};
 };
 
 [[nodiscard]] nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept;
@@ -68,9 +84,6 @@ union alignas ( 8 ) wintime_t {
 
 [[nodiscard]] systime_t wintime_to_systime ( wintime_t const wintime_ ) noexcept;
 [[nodiscard]] systime_t nixtime_to_systime ( nixtime_t const nixtime_ ) noexcept;
-
-[[nodiscard]] filtime_t wintime_to_filtime ( wintime_t const wintime_ ) noexcept;
-[[nodiscard]] filtime_t nixtime_to_filtime ( nixtime_t const nixtime_ ) noexcept;
 
 [[nodiscard]] wintime_t systime_to_wintime ( systime_t const & systime_ ) noexcept;
 [[nodiscard]] nixtime_t systime_to_nixtime ( systime_t const & systime_ ) noexcept;

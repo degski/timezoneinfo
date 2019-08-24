@@ -35,10 +35,11 @@
 bool init ( ) {
     if ( fs::exists ( g_timestamps_path ) )
         load_timestamps ( );
-    if ( not fs::exists ( g_windowszones_path ) or ( wintime ( ).i - g_timestamps.at ( "last_windowszones_download" ) ) >
-                                                       ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
+    if ( not fs::exists ( g_windowszones_path ) or
+         ( wintime ( ).as_uint64 ( ) - g_timestamps.at ( "last_windowszones_download" ) ) >
+             ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
         download_windowszones ( );
-        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).i );
+        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).as_uint64 ( ) );
         save_timestamps ( );
     }
     return true;
@@ -130,7 +131,9 @@ tzi_t get_tzi ( std::string const & iana_ ) noexcept {
 }
 
 tzi_t const & get_tzi_utc ( ) noexcept {
-    static tzi_t const utc = { 0, TEXT ( "Coordinated Universal Time" ), systime_t{}, 0, TEXT ( "Coordinated Universal Time" ), systime_t{}, 0 };
+    static tzi_t const utc = { 0, TEXT ( "Coordinated Universal Time" ), systime_t{},
+                               0, TEXT ( "Coordinated Universal Time" ), systime_t{},
+                               0 };
     return utc;
 }
 
@@ -150,17 +153,11 @@ nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_, nixtime_t const & nixtime_ ) n
     return systime_to_nixtime ( get_systime_in_tz ( tzi_, nixtime_to_systime ( nixtime_ ) ) );
 }
 
-systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept {
-    return get_systime_in_tz ( tzi_, systime ( ) );
-}
+systime_t get_systime_in_tz ( tzi_t const & tzi_ ) noexcept { return get_systime_in_tz ( tzi_, systime ( ) ); }
 
-wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept {
-    return systime_to_wintime ( get_systime_in_tz ( tzi_ ) );
-}
+wintime_t get_wintime_in_tz ( tzi_t const & tzi_ ) noexcept { return systime_to_wintime ( get_systime_in_tz ( tzi_ ) ); }
 
-nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept {
-    return systime_to_nixtime ( get_systime_in_tz ( tzi_ ) );
-}
+nixtime_t get_nixtime_in_tz ( tzi_t const & tzi_ ) noexcept { return systime_to_nixtime ( get_systime_in_tz ( tzi_ ) ); }
 
 systime_t get_systime_in_tz ( systime_t const & system_time_ ) noexcept {
     return get_systime_in_tz ( get_tzi_utc ( ), system_time_ );
@@ -225,20 +222,21 @@ wintime_t date_to_wintime ( int const y_, int const m_, int const d_ ) noexcept 
 }
 
 int days_since ( int const y_, int const m_, int const d_ ) noexcept {
-    return static_cast<int> ( ( get_wintime_in_tz ( wintime ( ) ).i - date_to_wintime ( y_, m_, d_ ).i ) / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) );
+    return static_cast<int> ( ( get_wintime_in_tz ( wintime ( ) ).as_uint64 ( ) - date_to_wintime ( y_, m_, d_ ).as_uint64 ( ) ) /
+                              ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) );
 }
 
 int days_since_winepoch ( ) noexcept {
-    return static_cast<int> ( get_wintime_in_tz ( wintime ( ) ).i / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) );
+    return static_cast<int> ( get_wintime_in_tz ( wintime ( ) ).as_uint64 ( ) / ( 24ULL * 60ULL * 60ULL * 10'000'000ULL ) );
 }
 
 std::int64_t local_utc_offset_minutes ( ) noexcept {
     wintime_t ft = wintime ( ), lt;
-    FileTimeToLocalFileTime ( &ft.filetime, &lt.filetime );
-    if ( ft.i > lt.i )
-        return +static_cast<std::int64_t> ( ( ft.i - lt.i ) / ( 60ULL * 10'000'000ULL ) );
+    FileTimeToLocalFileTime ( ft.data ( ), lt.data ( ) );
+    if ( ft.as_uint64 ( ) > lt.as_uint64 ( ) )
+        return +static_cast<std::int64_t> ( ( ft.as_uint64 ( ) - lt.as_uint64 ( ) ) / ( 60ULL * 10'000'000ULL ) );
     else
-        return -static_cast<std::int64_t> ( ( lt.i - ft.i ) / ( 60ULL * 10'000'000ULL ) );
+        return -static_cast<std::int64_t> ( ( lt.as_uint64 ( ) - ft.as_uint64 ( ) ) / ( 60ULL * 10'000'000ULL ) );
 }
 
 void print_nixtime ( nixtime_t const rawtime_ ) noexcept {
@@ -254,7 +252,6 @@ void print_wintime ( wintime_t const & rawtime_ ) noexcept {
     print_wintime ( std::cout, rawtime_ );
     std::cout << nl;
 }
-
 
 /*
 

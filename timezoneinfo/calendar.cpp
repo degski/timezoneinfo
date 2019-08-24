@@ -50,18 +50,21 @@
 #define S_10M 10'000'000LL
 
 nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept {
-    return ( wintime_.i > NS_SINCE_1970 ? wintime_.i - NS_SINCE_1970 : NS_SINCE_1970 - wintime_.i ) / U_10M;
+    return ( wintime_.as_uint64 ( ) > NS_SINCE_1970 ? wintime_.as_uint64 ( ) - NS_SINCE_1970
+                                                    : NS_SINCE_1970 - wintime_.as_uint64 ( ) ) /
+           U_10M;
 }
 
 wintime_t nixtime_to_wintime ( nixtime_t const nixtime_ ) noexcept {
     wintime_t wt;
-    wt.i = static_cast<std::uint64_t> ( static_cast<std::int64_t> ( nixtime_ ) * S_10M ) + NS_SINCE_1970;
+    wt.as_uint64 ( ) = static_cast<std::uint64_t> ( static_cast<std::int64_t> ( nixtime_ ) * S_10M ) + NS_SINCE_1970;
     return wt;
 }
 
 wintime_t wintime ( ) noexcept {
     wintime_t wt;
-    GetSystemTimeAsFileTime ( &wt.filetime );
+    GetSystemTimeAsFileTime ( wt.data ( ) );
+    wt.set_utc ( );
     return wt;
 }
 
@@ -81,7 +84,7 @@ nixtime_t nixtime ( ) noexcept { return wintime_to_nixtime ( wintime ( ) ); }
 
 systime_t wintime_to_systime ( wintime_t const wintime_ ) noexcept {
     systime_t st{};
-    FileTimeToSystemTime ( &wintime_.filetime, &st );
+    FileTimeToSystemTime ( wintime_.data ( ), &st );
     return st;
 }
 
@@ -91,16 +94,14 @@ systime_t nixtime_to_systime ( nixtime_t const nixtime_ ) noexcept {
 
 wintime_t systime_to_wintime ( systime_t const & systime_ ) noexcept {
     wintime_t wt;
-    SystemTimeToFileTime ( &systime_, &wt.filetime );
+    SystemTimeToFileTime ( &systime_, wt.data ( ) );
+    wt.set_utc ( );
     return wt;
 }
 
 nixtime_t systime_to_nixtime ( systime_t const & systime_ ) noexcept {
     return wintime_to_nixtime ( systime_to_wintime ( systime_ ) );
 }
-
-filtime_t wintime_to_filtime ( wintime_t const wintime_ ) noexcept { return wintime_.filetime; }
-filtime_t nixtime_to_filtime ( nixtime_t const nixtime_ ) noexcept { return nixtime_to_wintime ( nixtime_ ).filetime; }
 
 std::tm systime_to_tm ( systime_t const & systime_ ) noexcept {
     std::tm tmp{};
