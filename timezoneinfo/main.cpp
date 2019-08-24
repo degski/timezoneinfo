@@ -21,24 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "timezoneinfo.hpp"
+
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-
-#ifndef NOMINMAX
-#    define NOMINMAX
-#endif
-
-#ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#endif
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#    define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#include <Windows.h>
 
 #include <array>
 #include <charconv>
@@ -53,22 +41,6 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
-
-#include <fmt/core.h>
-#include <fmt/format.h>
-
-#include <tinyxml2.h>
-
-#include "calendar.hpp"
-#include "ianamap.hpp"
-#include "timezoneinfo.hpp"
-
-namespace fs = std::filesystem;
-
-#include <nlohmann/json.hpp>
-
-// for convenience.
-using json = nlohmann::json;
 
 int main ( ) {
 

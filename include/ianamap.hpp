@@ -57,6 +57,4 @@ using IanaMap = std::map<IanaMapKey, IanaMapValue>;
 
 [[nodiscard]] IanaMap build_iana_to_windowszones_map ( );
 
-inline IanaMap const g_iana = build_iana_to_windowszones_map ( );
-
 void download_windowszones ( );

@@ -23,40 +23,13 @@
 
 #pragma once
 
-#if _WIN32
-#    if defined( _DEBUG )
-#        pragma comment( lib, "fmtd.lib" )
-#    else
-#        pragma comment( lib, "fmt.lib" )
-#    endif
-#endif
-
 #include "calendar.hpp"
-
-#ifndef NOMINMAX
-#    define NOMINMAX
-#endif
-
-#ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#endif
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#    define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#include <Windows.h>
-
-#include <filesystem>
-#include <map>
-#include <string>
+#include "ianamap.hpp"
 
 #include <nlohmann/json.hpp>
 
 // for convenience.
 using json = nlohmann::json;
-
-namespace fs = std::filesystem;
 
 bool init ( );
 
@@ -71,6 +44,8 @@ using Timestamps = std::map<std::string, std::uint64_t>;
 
 inline Timestamps g_timestamps;
 inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
+
+inline IanaMap const g_iana = build_iana_to_windowszones_map ( );
 
 [[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
 [[nodiscard]] tzi_t const & get_tzi_utc ( ) noexcept;

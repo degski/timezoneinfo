@@ -21,19 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "calendar.hpp"
 #include "timezoneinfo.hpp"
 
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 
 #include <sax/iostream.hpp>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <fmt/time.h>
 
 /*
     typedef struct _SYSTEMTIME {
@@ -226,7 +225,9 @@ bool is_today_weekday ( ) noexcept {
     return is_weekday ( st.wYear, st.wMonth, st.wDay );
 }
 
-void print_nixtime ( nixtime_t const rawtime_ ) noexcept { std::printf ( "%s", std::asctime ( std::gmtime ( &rawtime_ ) ) ); }
+void print_nixtime ( nixtime_t const rawtime_ ) noexcept {
+    std::cout << fmt::format ( "{:%a %b %e %T %Y}", *std::gmtime ( &rawtime_ ) ) << nl;
+}
 
 void print_wintime ( wintime_t const rawtime_ ) noexcept {
     print_systime ( wintime_to_systime ( get_wintime_in_tz ( rawtime_ ) ) );
@@ -240,7 +241,7 @@ void print_systime ( systime_t const & st_ ) noexcept {
 template<typename Stream>
 void print_systime ( Stream & os_, systime_t const & st_ ) noexcept {
     // Thu Aug 22 13:41:12 2019
-    os_ << fmt::format ( "{} {} {} {:02}:{:02}:{:02} {}", dow[ st_.wDayOfWeek ], moy[ st_.wMonth - 1 ], st_.wDay, st_.wHour,
+    os_ << fmt::format ( "{} {} {:2} {:02}:{:02}:{:02} {}", dow[ st_.wDayOfWeek ], moy[ st_.wMonth - 1 ], st_.wDay, st_.wHour,
                          st_.wMinute, st_.wSecond, st_.wYear );
 }
 

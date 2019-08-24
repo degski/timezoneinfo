@@ -21,8 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "calendar.hpp"
-#include "ianamap.hpp"
 #include "timezoneinfo.hpp"
 
 #include <cassert>
