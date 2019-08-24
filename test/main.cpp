@@ -61,8 +61,15 @@ int main ( ) {
     print_wintime ( get_wintime_in_tz ( tzi2 ) );
     print_systime ( get_systime_in_tz ( tzi2 ) );
 
+    wintime_t t1 = wintime ( );
 
-    std::cout << local_utc_offset_minutes ( ) << nl;
+    wintime_t t2 = wintime ( );
+
+    auto d = t2.i - t1.i;
+
+    std::cout << t1 << nl;
+    std::cout << t2 << nl;
+    std::cout << d << nl;
 
     return EXIT_SUCCESS;
 }

@@ -112,18 +112,6 @@ inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February",
 [[nodiscard]] bool is_today_weekend ( ) noexcept;
 [[nodiscard]] bool is_today_weekday ( ) noexcept;
 
-void print_nixtime ( nixtime_t const rawtime_ ) noexcept;
-void print_wintime ( wintime_t const rawtime_ ) noexcept;
-void print_systime ( systime_t const & st_ ) noexcept;
-template<typename Stream>
-void print_systime ( Stream & os_, systime_t const & st_ ) noexcept;
-
 // Get the month day for the n_-th [ 1, 5 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
-
-template<typename Stream>
-[[maybe_unused]] Stream & operator<< ( Stream & os_, systime_t const & systime_ ) {
-    print_systime ( os_, systime_ );
-    return os_;
-}

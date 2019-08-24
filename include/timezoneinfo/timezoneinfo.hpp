@@ -26,6 +26,10 @@
 #include "calendar.hpp"
 #include "ianamap.hpp"
 
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/time.h>
+
 #include <nlohmann/json.hpp>
 
 // for convenience.
@@ -85,3 +89,31 @@ void load_timestamps ( );
 void save_to_file ( json const & j_, std::wstring const & name_ );
 void load_from_file ( json & j_, std::wstring const & name_ );
 json load ( fs::path const & file_ );
+
+void print_nixtime ( nixtime_t const rawtime_ ) noexcept;
+void print_systime ( systime_t const & system_time_ ) noexcept;
+void print_wintime ( wintime_t const & rawtime_ ) noexcept;
+
+template<typename Stream>
+void print_systime ( Stream & os_, systime_t const & system_time_ ) noexcept {
+    // Thu Aug 22 13:41:12 2019
+    os_ << fmt::format ( "{} {} {:2} {:02}:{:02}:{:02} {}", dow[ system_time_.wDayOfWeek ], moy[ system_time_.wMonth - 1 ],
+                         system_time_.wDay, system_time_.wHour, system_time_.wMinute, system_time_.wSecond, system_time_.wYear );
+}
+
+template<typename Stream>
+void print_wintime ( Stream & os_, wintime_t const & rawtime_ ) noexcept {
+    os_ << wintime_to_systime ( get_wintime_in_tz ( rawtime_ ) );
+}
+
+template<typename Stream>
+[[maybe_unused]] Stream & operator<< ( Stream & os_, systime_t const & systime_ ) {
+    print_systime ( os_, systime_ );
+    return os_;
+}
+
+template<typename Stream>
+[[maybe_unused]] Stream & operator<< ( Stream & os_, wintime_t const wintime_ ) {
+    print_wintime ( os_, wintime_ );
+    return os_;
+}

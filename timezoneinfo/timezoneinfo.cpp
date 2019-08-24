@@ -32,9 +32,6 @@
 #include <fstream>
 #include <sax/iostream.hpp>
 
-#include <fmt/core.h>
-#include <fmt/format.h>
-
 bool init ( ) {
     if ( fs::exists ( g_timestamps_path ) )
         load_timestamps ( );
@@ -242,6 +239,20 @@ std::int64_t local_utc_offset_minutes ( ) noexcept {
         return +static_cast<std::int64_t> ( ( ft.i - lt.i ) / ( 60ULL * 10'000'000ULL ) );
     else
         return -static_cast<std::int64_t> ( ( lt.i - ft.i ) / ( 60ULL * 10'000'000ULL ) );
+}
+
+void print_nixtime ( nixtime_t const rawtime_ ) noexcept {
+    std::cout << fmt::format ( "{:%a %b %e %T %Y}", *std::gmtime ( &rawtime_ ) ) << nl;
+}
+
+void print_systime ( systime_t const & system_time_ ) noexcept {
+    print_systime ( std::cout, system_time_ );
+    std::cout << nl;
+}
+
+void print_wintime ( wintime_t const & rawtime_ ) noexcept {
+    print_wintime ( std::cout, rawtime_ );
+    std::cout << nl;
 }
 
 
