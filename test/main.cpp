@@ -100,8 +100,8 @@ int main ( ) {
             auto const it = map.find ( ais );
             if ( std::end ( map ) == it )
                 map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
-            else if ( not std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
-                it->second.code = std::string{ line[ 1 ] };
+            else if ( std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
+                it->second.code = std::string{ "001" };
         }
     }
 

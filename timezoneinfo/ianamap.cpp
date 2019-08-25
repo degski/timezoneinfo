@@ -70,8 +70,8 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
                 auto it = map.find ( ais );
                 if ( std::end ( map ) == it )
                     map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ other }, std::string{ territory } } );
-                else if ( not std::strncmp ( "001", it->second.code.c_str ( ), 3 ) )
-                    it->second.code = std::string{ territory };
+                else if ( std::strncmp ( "001", it->second.code.c_str ( ), 3 ) )
+                    it->second.code = std::string{ "001" };
             }
         }
         if ( element != last_element )
