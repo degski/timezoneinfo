@@ -24,6 +24,9 @@
     <ClCompile Include="ianamap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="zfstream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE.md" />
@@ -37,6 +40,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\timezoneinfo\timezoneinfo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\timezoneinfo\zfstream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -231,6 +231,7 @@
     <ClCompile Include="calendar.cpp" />
     <ClCompile Include="ianamap.cpp" />
     <ClCompile Include="timezoneinfo.cpp" />
+    <ClCompile Include="zfstream.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE.md" />
@@ -240,6 +241,7 @@
     <ClInclude Include="..\include\timezoneinfo\calendar.hpp" />
     <ClInclude Include="..\include\timezoneinfo\ianamap.hpp" />
     <ClInclude Include="..\include\timezoneinfo\timezoneinfo.hpp" />
+    <ClInclude Include="..\include\timezoneinfo\zfstream.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

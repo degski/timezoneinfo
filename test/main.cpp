@@ -37,12 +37,14 @@
 #include <map>
 #include <random>
 #include <sax/iostream.hpp>
+#include <sax/string_split.hpp>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 
-int main ( ) {
+int main6587567 ( ) {
 
     init ( );
 
@@ -73,6 +75,40 @@ int main ( ) {
     std::cout << t1 << nl;
 
     std::cout << t1.get_offset ( ) << nl;
+
+    return EXIT_SUCCESS;
+}
+
+#include "zfstream.hpp"
+
+int main ( ) {
+
+    IanaMap map;
+
+    gzifstream inf;
+    char buf[ 512 ];
+
+    inf.rdbuf ( )->pubsetbuf ( 0, 0 );
+    inf.open ( "Y:/TMP/Mapping.csv.gz", std::ifstream::in );
+    while ( inf.getline ( buf, 512, '\n' ) ) {
+        auto const line = sax::string_split ( std::string_view{ buf }, "," );
+        for ( auto const ia : sax::string_split ( line[ 2 ], " " ) ) {
+            IanaMapKey ais{ ia };
+            auto it = map.find ( ais );
+            if ( std::end ( map ) == it )
+                map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
+            else if ( not std::strncmp ( "001", line [ 1 ].data ( ), 3 ) )
+                it->second.code = std::string{ line[ 1 ] };
+        }
+    }
+
+    inf.close ( );
+
+    for ( auto const & e : map ) {
+        std::cout << "key " << e.first << nl;
+        std::cout << "val " << e.second.name << nl;
+        std::cout << "code " << e.second.code << nl;
+    }
 
     return EXIT_SUCCESS;
 }

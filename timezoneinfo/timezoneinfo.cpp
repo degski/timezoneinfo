@@ -54,6 +54,64 @@ fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
     return return_value;
 }
 
+
+#define MAX_KEY_LENGTH 255
+#define MAX_VALUE_NAME 16383
+
+void fill_timezones_db ( ) {
+
+    HKEY hKey;
+
+    if ( RegOpenKeyEx ( HKEY_LOCAL_MACHINE, TEXT ( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones" ), 0, KEY_READ,
+                        &hKey ) == ERROR_SUCCESS ) {
+
+        TCHAR achKey[ MAX_KEY_LENGTH ];           // buffer for subkey name
+        DWORD cbName;                             // size of name std::string
+        TCHAR achClass[ MAX_PATH ] = TEXT ( "" ); // buffer for class name
+        DWORD cchClassName         = MAX_PATH;    // size of class std::string
+        DWORD cSubKeys             = 0;           // number of subkeys
+        DWORD cbMaxSubKey;                        // longest subkey size
+        DWORD cchMaxClass;                        // longest class std::string
+        DWORD cValues;                            // number of values for key
+        DWORD cchMaxValue;                        // longest value name
+        DWORD cbMaxValueData;                     // longest value data
+        DWORD cbSecurityDescriptor;               // size of security descriptor
+        FILETIME ftLastWriteTime;                 // last write time
+
+        TCHAR achValue[ MAX_VALUE_NAME ];
+        DWORD cchValue = MAX_VALUE_NAME;
+
+        // Get the class name and the value count.
+
+        RegQueryInfoKey (
+
+            hKey,                  // key handle
+            achClass,              // buffer for class name
+            &cchClassName,         // size of class std::string
+            NULL,                  // reserved
+            &cSubKeys,             // number of subkeys
+            &cbMaxSubKey,          // longest subkey size
+            &cchMaxClass,          // longest class std::string
+            &cValues,              // number of values for this key
+            &cchMaxValue,          // longest value name
+            &cbMaxValueData,       // longest value data
+            &cbSecurityDescriptor, // security descriptor
+            &ftLastWriteTime );    // last write time
+
+        // Enumerate the subkeys, until RegEnumKeyEx fails.
+
+        for ( DWORD i = 0u; i < cSubKeys; ++i ) {
+
+            cbName = MAX_KEY_LENGTH;
+
+            if ( RegEnumKeyEx ( hKey, i, achKey, &cbName, NULL, NULL, NULL, &ftLastWriteTime ) == ERROR_SUCCESS ) {
+            }
+        }
+    }
+
+    RegCloseKey ( hKey );
+}
+
 tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     // The registry entry for TZI.
     struct REG_TZI_FORMAT {
