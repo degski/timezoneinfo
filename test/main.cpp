@@ -38,6 +38,7 @@
 #include <random>
 #include <sax/iostream.hpp>
 #include <sax/string_split.hpp>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -81,20 +82,41 @@ int main6587567 ( ) {
 
 #include "zfstream.hpp"
 
+std::uint16_t fletcher16 ( std::uint8_t const * const data, int const count ) {
+    std::uint16_t sum1 = 0, sum2 = 0;
+    for ( int index = 0; index < count; ++index ) {
+        sum1 = ( sum1 + data[ index ] ) % 255;
+        sum2 = ( sum2 + sum1 ) % 255;
+    }
+    return ( sum2 << 8 ) | sum1;
+}
+
+std::uint8_t fletcher8 ( std::uint8_t const * const data, int const count ) {
+    std::uint8_t sum1 = 0, sum2 = 0;
+    for ( int index = 0; index < count; ++index ) {
+        sum1 = ( sum1 + data[ index ] ) % 255;
+        sum2 = ( sum2 + sum1 ) % 255;
+    }
+    return ( sum2 << 4 ) | sum1;
+}
+
 int main ( ) {
 
     IanaMap map;
+    std::map<std::string, std::uint8_t> ms;
 
     gzifstream inf;
     char buf[ 512 ];
 
-    inf.rdbuf ( )->pubsetbuf ( 0, 0 );
+    inf.rdbuf ( )->pubsetbuf ( 0, 0 ); // Unbuffered.
     inf.open ( "Y:/TMP/Mapping.csv.gz", std::ifstream::in );
     while ( inf.getline ( buf, 512 ) ) {
         std::string_view buf_view = buf;
         if ( '\r' == buf_view.back ( ) ) // If \r\n.
             buf_view.remove_suffix ( 1u );
         auto const line = sax::string_split ( buf_view, ',' );
+        ms.emplace ( std::string{ line[ 0 ] },
+                     fletcher8 ( ( std::uint8_t const * ) line[ 0 ].data ( ), ( int ) line[ 0 ].length ( ) ) );
         for ( auto const & ia : sax::string_split ( line[ 2 ], ' ' ) ) {
             IanaMapKey ais{ ia };
             auto const it = map.find ( ais );
@@ -107,11 +129,22 @@ int main ( ) {
 
     inf.close ( );
 
+    /*
     for ( auto const & e : map ) {
         std::cout << "key #" << e.first << "#" << nl;
         std::cout << "val #" << e.second.name << "#" << nl;
         std::cout << "cod #" << e.second.code << "#" << nl;
     }
+    */
+
+    std::set<std::uint16_t> s;
+
+    for ( auto const & e : ms ) {
+        std::cout << e.first << ' ' << ( int ) e.second << nl;
+        s.emplace ( e.second );
+    }
+
+    std::cout << "hash is unique: " << std::boolalpha << ( ms.size ( ) == s.size ( ) ) << nl;
 
     return EXIT_SUCCESS;
 }
