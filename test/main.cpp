@@ -90,14 +90,17 @@ int main ( ) {
 
     inf.rdbuf ( )->pubsetbuf ( 0, 0 );
     inf.open ( "Y:/TMP/Mapping.csv.gz", std::ifstream::in );
-    while ( inf.getline ( buf, 512, '\n' ) ) {
-        auto const line = sax::string_split ( std::string_view{ buf }, "," );
-        for ( auto const ia : sax::string_split ( line[ 2 ], " " ) ) {
+    while ( inf.getline ( buf, 512 ) ) {
+        std::string_view buf_view = buf;
+        if ( '\r' == buf_view.back ( ) ) // If \r\n.
+            buf_view.remove_suffix ( 1u );
+        auto const line = sax::string_split ( buf_view, ',' );
+        for ( auto const & ia : sax::string_split ( line[ 2 ], ' ' ) ) {
             IanaMapKey ais{ ia };
-            auto it = map.find ( ais );
+            auto const it = map.find ( ais );
             if ( std::end ( map ) == it )
                 map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
-            else if ( not std::strncmp ( "001", line [ 1 ].data ( ), 3 ) )
+            else if ( not std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
                 it->second.code = std::string{ line[ 1 ] };
         }
     }
@@ -105,9 +108,9 @@ int main ( ) {
     inf.close ( );
 
     for ( auto const & e : map ) {
-        std::cout << "key " << e.first << nl;
-        std::cout << "val " << e.second.name << nl;
-        std::cout << "code " << e.second.code << nl;
+        std::cout << "key #" << e.first << "#" << nl;
+        std::cout << "val #" << e.second.name << "#" << nl;
+        std::cout << "cod #" << e.second.code << "#" << nl;
     }
 
     return EXIT_SUCCESS;
