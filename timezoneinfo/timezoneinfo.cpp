@@ -31,6 +31,7 @@
 
 #include <fstream>
 #include <sax/iostream.hpp>
+#include <string_view>
 
 #include <curlpp/cURLpp.hpp>
 
@@ -38,17 +39,30 @@
 #include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
 
-bool init ( ) {
+int init ( ) {
+    if ( fs::exists ( g_timestamps_path ) )
+        load_timestamps ( );
+    if ( not fs::exists ( g_windowszones_path ) or
+         ( wintime ( ).as_uint64 ( ) - g_timestamps.at ( "last_windowszones_download" ) ) >
+             ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
+        download_windowszones ( );
+        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).as_uint64 ( ) );
+        save_timestamps ( );
+    }
+    return 0;
+}
+
+int init_alt ( ) {
     if ( fs::exists ( g_timestamps_path ) )
         load_timestamps ( );
     if ( not fs::exists ( g_windowszones_alt_path ) or
-         ( wintime ( ).as_uint64 ( ) - g_timestamps.at ( "last_windowszones_download" ) ) >
+         ( wintime ( ).as_uint64 ( ) - g_timestamps.at ( "last_windowszones_alt_download" ) ) >
              ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
         download_windowszones_alt ( );
         g_timestamps.insert_or_assign ( "last_windowszones_alt_download", wintime ( ).as_uint64 ( ) );
         save_timestamps ( );
     }
-    return true;
+    return 1;
 }
 
 fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
@@ -318,11 +332,19 @@ void print_wintime ( wintime_t const & rawtime_ ) noexcept {
 
 void download ( char const url_[], fs::path const & path_ ) {
     std::ofstream o ( path_, std::ios::binary );
-    try {
-        curlpp::Easy request;
-        request.setOpt<curlpp::options::WriteStream> ( &o );
+    // Set up curlpp.
+    curlpp::Easy request;
+    // Write to stream.
+    request.setOpt<curlpp::options::WriteStream> ( &o );
+    // Check if compressed file, if not, set encoding to 'deflate'.
+    std::string_view ext{ url_ };
+    ext.remove_prefix ( ext.length ( ) - 2 );
+    if ( std::strncmp ( "gz", ext.data ( ), 2 ) )
         request.setOpt<curlpp::options::Encoding> ( "deflate" );
-        request.setOpt<curlpp::options::Url> ( url_ );
+    // Set url.
+    request.setOpt<curlpp::options::Url> ( url_ );
+    // Do the download.
+    try {
         request.perform ( );
     }
     catch ( curlpp::RuntimeError & e ) {
@@ -331,6 +353,7 @@ void download ( char const url_[], fs::path const & path_ ) {
     catch ( curlpp::LogicError & e ) {
         std::cout << e.what ( ) << std::endl;
     }
+    // Clean up.
     o.flush ( );
     o.close ( );
 }

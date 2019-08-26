@@ -47,18 +47,12 @@
 
 int main ( ) {
 
-    download_windowszones_alt ( );
-
-    g_iana = build_iana_to_windowszones_alt_map ( );
-
-    //init ( );
+    init_alt ( );
 
     std::cout << g_iana.size ( ) << nl;
 
     for ( auto const & e : g_iana )
         std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
-
-    /*
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
@@ -81,8 +75,6 @@ int main ( ) {
     std::cout << t1 << nl;
 
     std::cout << t1.get_offset ( ) << nl;
-
-    */
 
     return EXIT_SUCCESS;
 }
