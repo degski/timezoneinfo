@@ -47,7 +47,7 @@
 
 namespace fs = std::filesystem;
 
-using IanaMapKey  = std::string;
+using IanaMapKey = std::string;
 
 struct IanaMapValue {
     std::string name, code;
@@ -55,6 +55,8 @@ struct IanaMapValue {
 
 using IanaMap = std::map<IanaMapKey, IanaMapValue>;
 
-[[nodiscard]] IanaMap build_iana_to_windowszones_map ( );
-
 void download_windowszones ( );
+void download_windowszones_alt ( );
+
+[[nodiscard]] IanaMap build_iana_to_windowszones_map ( );
+[[nodiscard]] IanaMap build_iana_to_windowszones_alt_map ( );

@@ -39,8 +39,9 @@ bool init ( );
 
 [[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept;
 
-inline fs::path const g_app_data_path     = get_app_data_path ( L"timezoneinfo" );
-inline fs::path const g_windowszones_path = g_app_data_path / L"windowszones.xml";
+inline fs::path const g_app_data_path         = get_app_data_path ( L"timezoneinfo" );
+inline fs::path const g_windowszones_path     = g_app_data_path / L"windowszones.xml";
+inline fs::path const g_windowszones_alt_path = g_app_data_path / L"Mapping.csv.gz";
 
 using tzi_t = TIME_ZONE_INFORMATION;
 
@@ -49,7 +50,7 @@ using Timestamps = std::map<std::string, std::uint64_t>;
 inline Timestamps g_timestamps;
 inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 
-inline IanaMap const g_iana = build_iana_to_windowszones_map ( );
+inline IanaMap g_iana; //= build_iana_to_windowszones_alt_map ( );
 
 [[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
 [[nodiscard]] tzi_t const & get_tzi_utc ( ) noexcept;
@@ -118,3 +119,5 @@ template<typename Stream>
     print_wintime ( os_, wintime_ );
     return os_;
 }
+
+void download ( char const url_[], fs::path const & path_ );

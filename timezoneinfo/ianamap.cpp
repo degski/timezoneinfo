@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 #include "timezoneinfo.hpp"
+#include "zfstream.hpp"
 
 #include <fstream>
 #include <map>
@@ -31,13 +32,17 @@
 #include <string>
 #include <string_view>
 
-#include <curlpp/cURLpp.hpp>
-
-#include <curlpp/Easy.hpp>
-#include <curlpp/Infos.hpp>
-#include <curlpp/Options.hpp>
-
 #include <tinyxml2.h>
+
+void download_windowszones ( ) {
+    download ( "https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml",
+               g_windowszones_path );
+}
+
+void download_windowszones_alt ( ) {
+    download ( "https://raw.githubusercontent.com/mj1856/TimeZoneConverter/master/src/TimeZoneConverter/Data/Mapping.csv.gz",
+               g_windowszones_alt_path );
+}
 
 char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char const name_[] ) noexcept {
     char const * out;
@@ -82,22 +87,31 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
     return map;
 }
 
-void download_windowszones ( ) {
-    std::ofstream o ( g_windowszones_path );
-    try {
-        curlpp::Easy request;
-        request.setOpt<curlpp::options::WriteStream> ( &o );
-        request.setOpt<curlpp::options::Encoding> ( "deflate" );
-        request.setOpt<curlpp::options::Url> (
-            "https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml" );
-        request.perform ( );
+[[nodiscard]] IanaMap build_iana_to_windowszones_alt_map ( ) {
+    IanaMap map;
+    gzifstream inf;
+    char buf[ 512 ];
+    if ( not fs::exists ( g_windowszones_alt_path ) ) {
+        download_windowszones_alt ( );
+        g_timestamps.insert_or_assign ( "last_windowszones_alt_download", wintime ( ).as_uint64 ( ) );
+        save_timestamps ( );
     }
-    catch ( curlpp::RuntimeError & e ) {
-        std::cout << e.what ( ) << std::endl;
+    inf.rdbuf ( )->pubsetbuf ( 0, 0 ); // Unbuffered.
+    inf.open ( g_windowszones_alt_path.string ( ).c_str ( ), std::ifstream::in );
+    while ( inf.getline ( buf, 512 ) ) {
+        std::string_view buf_view = buf;
+        if ( '\r' == buf_view.back ( ) ) // If \r\n.
+            buf_view.remove_suffix ( 1u );
+        auto const line = sax::string_split ( buf_view, ',' );
+        for ( auto const & ia : sax::string_split ( line[ 2 ], ' ' ) ) {
+            IanaMapKey ais{ ia };
+            auto const it = map.find ( ais );
+            if ( std::end ( map ) == it )
+                map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
+            else if ( std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
+                it->second.code = std::string{ "001" };
+        }
     }
-    catch ( curlpp::LogicError & e ) {
-        std::cout << e.what ( ) << std::endl;
-    }
-    o.flush ( );
-    o.close ( );
+    inf.close ( );
+    return map;
 }

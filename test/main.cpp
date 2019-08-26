@@ -47,13 +47,18 @@
 
 int main ( ) {
 
-    init ( );
+    download_windowszones_alt ( );
+
+    g_iana = build_iana_to_windowszones_alt_map ( );
+
+    //init ( );
 
     std::cout << g_iana.size ( ) << nl;
 
     for ( auto const & e : g_iana )
-        std::cout << e.first << nl;
-    // " - " << e.second.name << " - " << e.second.code << nl;
+        std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
+
+    /*
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
@@ -77,10 +82,10 @@ int main ( ) {
 
     std::cout << t1.get_offset ( ) << nl;
 
+    */
+
     return EXIT_SUCCESS;
 }
-
-#include "zfstream.hpp"
 
 std::uint16_t fletcher16 ( std::uint8_t const * const data, int const count ) {
     std::uint16_t sum1 = 0, sum2 = 0;
@@ -98,39 +103,4 @@ std::uint8_t fletcher8 ( std::uint8_t const * const data, int const count ) {
         sum2 = ( sum2 + sum1 ) % 255;
     }
     return ( sum2 << 4 ) | sum1;
-}
-
-int main78678 ( ) {
-
-    IanaMap map;
-
-    gzifstream inf;
-    char buf[ 512 ];
-
-    inf.rdbuf ( )->pubsetbuf ( 0, 0 ); // Unbuffered.
-    inf.open ( "Y:/TMP/Mapping.csv.gz", std::ifstream::in );
-    while ( inf.getline ( buf, 512 ) ) {
-        std::string_view buf_view = buf;
-        if ( '\r' == buf_view.back ( ) ) // If \r\n.
-            buf_view.remove_suffix ( 1u );
-        auto const line = sax::string_split ( buf_view, ',' );
-        for ( auto const & ia : sax::string_split ( line[ 2 ], ' ' ) ) {
-            IanaMapKey ais{ ia };
-            auto const it = map.find ( ais );
-            if ( std::end ( map ) == it )
-                map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
-            else if ( std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
-                it->second.code = std::string{ "001" };
-        }
-    }
-
-    inf.close ( );
-
-    for ( auto const & e : map ) {
-        // std::cout << "key #" << e.first << "#" << nl;
-        std::cout << "val #" << e.second.name << "#" << nl;
-        // std::cout << "cod #" << e.second.code << "#" << nl;
-    }
-
-    return EXIT_SUCCESS;
 }

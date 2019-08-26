@@ -32,14 +32,20 @@
 #include <fstream>
 #include <sax/iostream.hpp>
 
+#include <curlpp/cURLpp.hpp>
+
+#include <curlpp/Easy.hpp>
+#include <curlpp/Infos.hpp>
+#include <curlpp/Options.hpp>
+
 bool init ( ) {
     if ( fs::exists ( g_timestamps_path ) )
         load_timestamps ( );
-    if ( not fs::exists ( g_windowszones_path ) or
+    if ( not fs::exists ( g_windowszones_alt_path ) or
          ( wintime ( ).as_uint64 ( ) - g_timestamps.at ( "last_windowszones_download" ) ) >
              ( 30ULL * 24ULL * 60ULL * 60ULL * 10'000'000ULL ) ) {
-        download_windowszones ( );
-        g_timestamps.insert_or_assign ( "last_windowszones_download", wintime ( ).as_uint64 ( ) );
+        download_windowszones_alt ( );
+        g_timestamps.insert_or_assign ( "last_windowszones_alt_download", wintime ( ).as_uint64 ( ) );
         save_timestamps ( );
     }
     return true;
@@ -53,7 +59,6 @@ fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
     fs::create_directory ( return_value ); // No error if directory exists.
     return return_value;
 }
-
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
@@ -309,6 +314,25 @@ void print_systime ( systime_t const & system_time_ ) noexcept {
 void print_wintime ( wintime_t const & rawtime_ ) noexcept {
     print_wintime ( std::cout, rawtime_ );
     std::cout << nl;
+}
+
+void download ( char const url_[], fs::path const & path_ ) {
+    std::ofstream o ( path_, std::ios::binary );
+    try {
+        curlpp::Easy request;
+        request.setOpt<curlpp::options::WriteStream> ( &o );
+        request.setOpt<curlpp::options::Encoding> ( "deflate" );
+        request.setOpt<curlpp::options::Url> ( url_ );
+        request.perform ( );
+    }
+    catch ( curlpp::RuntimeError & e ) {
+        std::cout << e.what ( ) << std::endl;
+    }
+    catch ( curlpp::LogicError & e ) {
+        std::cout << e.what ( ) << std::endl;
+    }
+    o.flush ( );
+    o.close ( );
 }
 
 /*
