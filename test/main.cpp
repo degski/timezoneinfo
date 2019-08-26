@@ -45,7 +45,7 @@
 #include <type_traits>
 #include <vector>
 
-int main6587567 ( ) {
+int main ( ) {
 
     init ( );
 
@@ -71,7 +71,7 @@ int main6587567 ( ) {
 
     std::cout << t1 << nl;
 
-    t1.set_utc ( );
+    t1.set_offset ( 165 );
 
     std::cout << t1 << nl;
 
@@ -100,7 +100,7 @@ std::uint8_t fletcher8 ( std::uint8_t const * const data, int const count ) {
     return ( sum2 << 4 ) | sum1;
 }
 
-int main ( ) {
+int main78678 ( ) {
 
     IanaMap map;
     std::map<std::string, std::uint8_t> ms;
