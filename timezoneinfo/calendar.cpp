@@ -45,19 +45,19 @@
     } systime_t, *PSYSTEMTIME;
 */
 
-#define NS_SINCE_1970 116'444'736'000'000'000ULL
+#define WIN_TO_NIX_EPOCH 116'444'736'000'000'000ULL
 #define U_10M 10'000'000ULL
 #define S_10M 10'000'000LL
 
 nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept {
-    return ( wintime_.as_uint64 ( ) > NS_SINCE_1970 ? wintime_.as_uint64 ( ) - NS_SINCE_1970
-                                                    : NS_SINCE_1970 - wintime_.as_uint64 ( ) ) /
+    return ( wintime_.as_uint64 ( ) > WIN_TO_NIX_EPOCH ? wintime_.as_uint64 ( ) - WIN_TO_NIX_EPOCH
+                                                    : WIN_TO_NIX_EPOCH - wintime_.as_uint64 ( ) ) /
            U_10M;
 }
 
 wintime_t nixtime_to_wintime ( nixtime_t const nixtime_ ) noexcept {
     wintime_t wt;
-    wt.as_uint64 ( ) = static_cast<std::uint64_t> ( static_cast<std::int64_t> ( nixtime_ ) * S_10M ) + NS_SINCE_1970;
+    wt.as_uint64 ( ) = static_cast<std::uint64_t> ( static_cast<std::int64_t> ( nixtime_ ) * S_10M ) + WIN_TO_NIX_EPOCH;
     return wt;
 }
 
@@ -133,7 +133,7 @@ systime_t tm_to_systime ( std::tm const & tm_ ) noexcept {
     return tmp;
 }
 
-#undef NS_SINCE_1970
+#undef WIN_TO_NIX_EPOCH
 #undef U_10M
 #undef S_10M
 

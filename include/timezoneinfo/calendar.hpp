@@ -49,8 +49,6 @@
 #include <cstdint>
 #include <ctime>
 
-// src/TimeZoneConverter/Data/Mapping.csv.gz
-
 using nixtime_t = std::time_t; // Signed 64-bit value on Windows x64.
 
 using systime_t = SYSTEMTIME;
