@@ -47,7 +47,7 @@
 
 int main ( ) {
 
-    init_alt ( );
+    init ( );
 
     std::cout << g_iana.size ( ) << nl;
 

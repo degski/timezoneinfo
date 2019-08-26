@@ -51,7 +51,7 @@ using Timestamps = std::map<std::string, std::uint64_t>;
 inline Timestamps g_timestamps;
 inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 
-inline IanaMap g_iana = build_iana_to_windowszones_alt_map ( );
+inline IanaMap g_iana = build_iana_to_windowszones_map ( );
 
 [[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
 [[nodiscard]] tzi_t const & get_tzi_utc ( ) noexcept;
