@@ -51,6 +51,7 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
 }
 
 [[nodiscard]] IanaMap build_iana_to_windowszones_map ( ) {
+    WinTzSet db = fill_timezones_db ( );
     IanaMap map;
     tinyxml2::XMLDocument doc;
     if ( not fs::exists ( g_windowszones_path ) ) {
@@ -65,9 +66,9 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
                                                ->FirstChildElement ( "mapZone" );
     tinyxml2::XMLElement const * const last_element = element->Parent ( )->LastChildElement ( "mapZone" );
     while ( true ) {
-        auto const other     = element_to_cstr ( element, "other" );
-        auto const territory = element_to_cstr ( element, "territory" );
-        if ( std::strncmp ( "001", territory, 3 ) ) {
+        auto const other = element_to_cstr ( element, "other" );
+        if ( std::end ( db ) != db.find ( std::string{ other } ) ) {
+            auto const territory = element_to_cstr ( element, "territory" );
             for ( auto & ia : sax::string_split ( std::string_view{ element_to_cstr ( element, "type" ) }, " " ) ) {
                 // if ( "Etc" == ia.substr ( 0u, 3u ) )
                 //     ia = ia.substr ( 4u, ia.size ( ) - 4 );
@@ -88,6 +89,7 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
 }
 
 [[nodiscard]] IanaMap build_iana_to_windowszones_alt_map ( ) {
+    WinTzSet db = fill_timezones_db ( );
     IanaMap map;
     gzifstream inf;
     char buf[ 512 ];
@@ -103,13 +105,15 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
         if ( '\r' == buf_view.back ( ) ) // If \r\n.
             buf_view.remove_suffix ( 1u );
         auto const line = sax::string_split ( buf_view, ',' );
-        for ( auto const & ia : sax::string_split ( line[ 2 ], ' ' ) ) {
-            IanaMapKey ais{ ia };
-            auto const it = map.find ( ais );
-            if ( std::end ( map ) == it )
-                map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
-            else if ( std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
-                it->second.code = std::string{ "001" };
+        if ( std::end ( db ) != db.find ( std::string{ line[ 0 ] } ) ) {
+            for ( auto const & ia : sax::string_split ( line[ 2 ], ' ' ) ) {
+                IanaMapKey ais{ ia };
+                auto const it = map.find ( ais );
+                if ( std::end ( map ) == it )
+                    map.emplace ( std::move ( ais ), IanaMapValue{ std::string{ line[ 0 ] }, std::string{ line[ 1 ] } } );
+                else if ( std::strncmp ( "001", line[ 1 ].data ( ), 3 ) )
+                    it->second.code = std::string{ "001" };
+            }
         }
     }
     inf.close ( );

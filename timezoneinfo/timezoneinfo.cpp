@@ -32,12 +32,13 @@
 #include <fstream>
 #include <sax/iostream.hpp>
 #include <sax/utf8conv.hpp>
+#include <set>
 #include <string_view>
 
-#include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
+#include <curlpp/cURLpp.hpp>
 
 int init ( ) {
     if ( fs::exists ( g_timestamps_path ) )
@@ -77,7 +78,9 @@ fs::path get_app_data_path ( std::wstring && place_ ) noexcept {
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
 
-void fill_timezones_db ( ) {
+WinTzSet fill_timezones_db ( ) noexcept {
+
+    std::set<std::string> db;
 
     HKEY hKey;
 
@@ -123,11 +126,14 @@ void fill_timezones_db ( ) {
             cbName = MAX_KEY_LENGTH;
 
             if ( RegEnumKeyEx ( hKey, i, achKey, &cbName, NULL, NULL, NULL, &ftLastWriteTime ) == ERROR_SUCCESS ) {
+                db.emplace ( sax::utf16_to_utf8 ( std::wstring_view ( achKey ) ) );
             }
         }
     }
 
     RegCloseKey ( hKey );
+
+    return db;
 }
 
 tzi_t get_tzi ( std::string const & iana_ ) noexcept {

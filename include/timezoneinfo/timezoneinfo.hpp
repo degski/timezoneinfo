@@ -26,11 +26,11 @@
 #include "calendar.hpp"
 #include "ianamap.hpp"
 
-// #define FMT_USE_GRISU 1
-#include <fmt/core.h>
-#include <fmt/format.h>
+#define FMT_USE_GRISU 1
 #include <fmt/chrono.h>
 #include <fmt/compile.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <nlohmann/json.hpp>
 
@@ -41,6 +41,7 @@ int init ( );
 int init_alt ( );
 
 [[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept;
+WinTzSet fill_timezones_db ( ) noexcept;
 
 inline fs::path const g_app_data_path         = get_app_data_path ( L"timezoneinfo" );
 inline fs::path const g_windowszones_path     = g_app_data_path / L"windowszones.xml";
@@ -53,7 +54,7 @@ using Timestamps = std::map<std::string, std::uint64_t>;
 inline Timestamps g_timestamps;
 inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
 
-inline IanaMap g_iana = build_iana_to_windowszones_map ( );
+inline IanaMap g_iana = build_iana_to_windowszones_alt_map ( );
 
 [[nodiscard]] tzi_t get_tzi ( std::string const & desc_ ) noexcept;
 [[nodiscard]] tzi_t const & get_tzi_utc ( ) noexcept;

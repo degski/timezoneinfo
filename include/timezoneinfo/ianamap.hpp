@@ -43,6 +43,7 @@
 #include <filesystem>
 #include <map>
 #include <sax/stl.hpp>
+#include <set>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -53,7 +54,8 @@ struct IanaMapValue {
     std::string name, code;
 };
 
-using IanaMap = std::map<IanaMapKey, IanaMapValue>;
+using IanaMap  = std::map<IanaMapKey, IanaMapValue>;
+using WinTzSet = std::set<std::string>;
 
 void download_windowszones ( );
 void download_windowszones_alt ( );
