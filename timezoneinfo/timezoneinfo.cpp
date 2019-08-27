@@ -31,10 +31,10 @@
 
 #include <fstream>
 #include <sax/iostream.hpp>
+#include <sax/utf8conv.hpp>
 #include <string_view>
 
 #include <curlpp/cURLpp.hpp>
-
 #include <curlpp/Easy.hpp>
 #include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
@@ -97,7 +97,6 @@ void fill_timezones_db ( ) {
         DWORD cbSecurityDescriptor;               // size of security descriptor
         FILETIME ftLastWriteTime;                 // last write time
 
-        TCHAR achValue[ MAX_VALUE_NAME ];
         DWORD cchValue = MAX_VALUE_NAME;
 
         // Get the class name and the value count.
@@ -146,7 +145,7 @@ tzi_t get_tzi ( std::string const & iana_ ) noexcept {
     REG_TZI_FORMAT reg_tzi{};
     tzi_t tzi{};
     // Create URI.
-    std::wstring const desc = fmt::to_wstring ( g_iana.at ( iana_ ).name );
+    std::wstring const desc = sax::utf8_to_utf16 ( g_iana.at ( iana_ ).name );
     std::wstring const uri  = std::wstring ( L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" ) + desc;
     auto result             = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, uri.c_str ( ), 0, KEY_READ, &key );
     assert ( ERROR_SUCCESS == result );
