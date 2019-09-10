@@ -43,16 +43,16 @@ int init_alt ( );
 [[nodiscard]] fs::path get_app_data_path ( std::wstring && place_ ) noexcept;
 WinTzSet fill_timezones_db ( ) noexcept;
 
-inline fs::path const g_app_data_path         = get_app_data_path ( L"timezoneinfo" );
-inline fs::path const g_windowszones_path     = g_app_data_path / L"windowszones.xml";
-inline fs::path const g_windowszones_alt_path = g_app_data_path / L"windowszones_alt.csv.gz";
+inline fs::path const & g_app_data_path         = get_app_data_path ( L"timezoneinfo" );
+inline fs::path const & g_windowszones_path     = g_app_data_path / L"windowszones.xml";
+inline fs::path const & g_windowszones_alt_path = g_app_data_path / L"windowszones_alt.csv.gz";
 
 using tzi_t = TIME_ZONE_INFORMATION;
 
 using Timestamps = std::map<std::string, std::uint64_t>;
 
 inline Timestamps g_timestamps;
-inline fs::path const g_timestamps_path = g_app_data_path / L"timestamps.json";
+inline fs::path const & g_timestamps_path = g_app_data_path / L"timestamps.json";
 
 inline IanaMap g_iana = build_iana_to_windowszones_alt_map ( );
 

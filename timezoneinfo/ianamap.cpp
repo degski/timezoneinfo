@@ -99,7 +99,7 @@ char const * element_to_cstr ( tinyxml2::XMLElement const * const element_, char
         save_timestamps ( );
     }
     inf.rdbuf ( )->pubsetbuf ( 0, 0 ); // Unbuffered.
-    inf.open ( g_windowszones_alt_path.string ( ).c_str ( ), std::ifstream::in );
+    inf.open ( g_windowszones_alt_path.string ( ).c_str ( ), std::ios::binary | std::ifstream::in );
     while ( inf.getline ( buf, 512 ) ) {
         std::string_view buf_view = buf;
         if ( '\r' == buf_view.back ( ) ) // If \r\n.

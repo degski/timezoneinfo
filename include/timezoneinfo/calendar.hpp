@@ -24,7 +24,7 @@
 #pragma once
 
 #if _WIN32
-#    if defined( _DEBUG )
+#    if not defined( NDEBUG )
 #        pragma comment( lib, "fmtd.lib" )
 #    else
 #        pragma comment( lib, "fmt.lib" )
