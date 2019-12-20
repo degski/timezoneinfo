@@ -46,33 +46,38 @@
 #include <vector>
 
 void print_calendar_ ( int const y_, int const m_ ) noexcept {
-    std::ostringstream out;
-    out << std::string ( ( 20 - std::strlen ( month_of_the_year[ m_ - 1 ] ) ) / 2, ' ' ) << month_of_the_year[ m_ - 1 ] << ' ' << y_
-        << nl;
-    int f = day_week ( y_, m_, 1 ), c = 1, l = days_month ( y_, m_ ), w = year_weeks ( y_, m_, 1 );
-    out << "  # Su Mo Tu We Th Fr Sa" << nl;
+    std::string s;
+    s.reserve ( 192 );
+    s.append ( ( 20 - std::strlen ( month_of_the_year[ m_ - 1 ] ) ) / 2, ' ' );
+    s.append ( month_of_the_year[ m_ - 1 ] );
+    s.push_back ( ' ' );
+    s.append ( fmt::format ( "{}", y_ ) );
+    s.append ( "\n  # Su Mo Tu We Th Fr Sa\n" );
+    int w = year_weeks ( y_, m_, 1 ), f = day_week ( y_, m_, 1 );
     // first line.
-    out << fmt::format ( "{:3}", w++ ) << std::string ( 3 * f, ' ' );
+    s.append ( fmt::format ( "{:3}", w++ ) );
+    s.append ( 3 * f, ' ' );
+    int c = 1;
     for ( ; f < 7; ++f )
-        out << fmt::format ( "{:3}", c++ );
-    out << nl;
+        s.append ( fmt::format ( "{:3}", c++ ) );
+    s.push_back ( '\n' );
+    int const l = days_month ( y_, m_ );
     // middle lines.
     while ( c <= ( l - 7 ) ) {
-        out << fmt::format ( "{:3}", w++ );
+        s.append ( fmt::format ( "{:3}", w++ ) );
         for ( int i = 0; i < 7; ++i )
-            out << fmt::format ( "{:3}", c++ );
-        out << nl;
+            s.append ( fmt::format ( "{:3}", c++ ) );
+        s.push_back ( '\n' );
     }
     // last line (iff applicable).
     if ( c <= l ) {
-        out << fmt::format ( "{:3}", w );
+        s.append ( fmt::format ( "{:3}", w ) );
         do {
-            out << fmt::format ( "{:3}", c++ );
+            s.append ( fmt::format ( "{:3}", c++ ) );
         } while ( c <= l );
-        out << nl;
+        s.push_back ( '\n' );
     }
-    out.flush ( );
-    std::cout << out.str ( );
+    std::cout << s;
 }
 
 int main ( ) {
