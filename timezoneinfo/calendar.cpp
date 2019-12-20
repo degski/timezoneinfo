@@ -266,8 +266,8 @@ int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { ret
     // middle lines.
     while ( c <= ( l - 7 ) ) {
         s.append ( fmt::format ( "{:3}", w++ ) );
-        for ( int i = 0; i < 7; ++i )
-            s.append ( fmt::format ( "{:3}", c++ ) );
+        for ( int i = 0; i < 7; ++i, ++c )
+            s.append ( fmt::format ( "{:3}", c ) );
         s.push_back ( '\n' );
     }
     // last line (iff applicable).
