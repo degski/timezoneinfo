@@ -45,47 +45,14 @@
 #include <type_traits>
 #include <vector>
 
-void print_calendar_ ( int const y_, int const m_ ) noexcept {
-    std::string s;
-    s.reserve ( 192 );
-    s.append ( ( 20 - std::strlen ( month_of_the_year[ m_ - 1 ] ) ) / 2, ' ' );
-    s.append ( month_of_the_year[ m_ - 1 ] );
-    s.push_back ( ' ' );
-    s.append ( fmt::format ( "{}", y_ ) );
-    s.append ( "\n  # Su Mo Tu We Th Fr Sa\n" );
-    int w = year_weeks ( y_, m_, 1 ), f = day_week ( y_, m_, 1 );
-    // first line.
-    s.append ( fmt::format ( "{:3}", w++ ) );
-    s.append ( 3 * f, ' ' );
-    int c = 1;
-    for ( ; f < 7; ++f )
-        s.append ( fmt::format ( "{:3}", c++ ) );
-    s.push_back ( '\n' );
-    int const l = days_month ( y_, m_ );
-    // middle lines.
-    while ( c <= ( l - 7 ) ) {
-        s.append ( fmt::format ( "{:3}", w++ ) );
-        for ( int i = 0; i < 7; ++i )
-            s.append ( fmt::format ( "{:3}", c++ ) );
-        s.push_back ( '\n' );
-    }
-    // last line (iff applicable).
-    if ( c <= l ) {
-        s.append ( fmt::format ( "{:3}", w ) );
-        do {
-            s.append ( fmt::format ( "{:3}", c++ ) );
-        } while ( c <= l );
-        s.push_back ( '\n' );
-    }
-    std::cout << s;
-}
+void print_calendar ( int const y_, int const m_ ) noexcept { std::cout << calendar ( y_, m_ ); }
 
 int main ( ) {
 
     init_alt ( );
 
     for ( int i = 1; i < 13; ++i ) {
-        print_calendar_ ( 2019, i );
+        print_calendar ( 2019, i );
         std::cout << nl;
     }
 
