@@ -51,7 +51,7 @@
 
 nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept {
     return ( wintime_.as_uint64 ( ) > WIN_TO_NIX_EPOCH ? wintime_.as_uint64 ( ) - WIN_TO_NIX_EPOCH
-                                                    : WIN_TO_NIX_EPOCH - wintime_.as_uint64 ( ) ) /
+                                                       : WIN_TO_NIX_EPOCH - wintime_.as_uint64 ( ) ) /
            U_10M;
 }
 
@@ -69,13 +69,13 @@ wintime_t wintime ( ) noexcept {
 }
 
 systime_t systime ( ) noexcept {
-    systime_t st{};
+    systime_t st{ };
     GetSystemTime ( &st );
     return st;
 }
 
 systime_t localtime ( ) noexcept {
-    systime_t lt{};
+    systime_t lt{ };
     GetLocalTime ( &lt );
     return lt;
 }
@@ -83,7 +83,7 @@ systime_t localtime ( ) noexcept {
 nixtime_t nixtime ( ) noexcept { return wintime_to_nixtime ( wintime ( ) ); }
 
 systime_t wintime_to_systime ( wintime_t const wintime_ ) noexcept {
-    systime_t st{};
+    systime_t st{ };
     FileTimeToSystemTime ( wintime_.data ( ), &st );
     return st;
 }
@@ -104,7 +104,7 @@ nixtime_t systime_to_nixtime ( systime_t const & systime_ ) noexcept {
 }
 
 std::tm systime_to_tm ( systime_t const & systime_ ) noexcept {
-    std::tm tmp{};
+    std::tm tmp{ };
     tmp.tm_sec                        = systime_.wSecond;
     tmp.tm_min                        = systime_.wMinute;
     tmp.tm_hour                       = systime_.wHour;
@@ -121,7 +121,7 @@ std::tm systime_to_tm ( systime_t const & systime_ ) noexcept {
 }
 
 systime_t tm_to_systime ( std::tm const & tm_ ) noexcept {
-    systime_t tmp{};
+    systime_t tmp{ };
     tmp.wYear         = tm_.tm_year + 1'900;
     tmp.wMonth        = tm_.tm_mon + 1;
     tmp.wDayOfWeek    = tm_.tm_wday;
@@ -198,7 +198,7 @@ int last_weekday ( int y_, int m_ ) noexcept {
 }
 
 std::time_t last_weekday_time ( int const y_, int const m_, int const w_ ) noexcept {
-    std::tm date{};
+    std::tm date{ };
     date.tm_year = y_ - 1'900; // two digit y_!
     date.tm_mon  = m_ - 1;
     date.tm_mday = last_weekday_day ( y_, m_, w_ );
@@ -239,3 +239,14 @@ int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { ret
 #if _WIN32
 #    undef timegm
 #endif
+
+#ifndef FMT_USE_GRISU
+#    define FMT_USE_GRISU 1
+#endif
+
+#include <fmt/chrono.h>
+#include <fmt/compile.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
+
+void print_calendar ( int const y_, int const m_ ) noexcept { std::cout << fmt::format ( "{} {:2}", y_, m_ ) << nl; }

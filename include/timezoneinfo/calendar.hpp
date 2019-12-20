@@ -71,7 +71,7 @@ struct alignas ( 8 ) wintime_t {
     int get_offset ( ) const noexcept { return static_cast<int> ( *reinterpret_cast<char const *> ( this ) ) * 15; }
 
     private:
-    filtime_t value{};
+    filtime_t value{ };
 };
 
 [[nodiscard]] nixtime_t wintime_to_nixtime ( wintime_t const wintime_ ) noexcept;
@@ -128,3 +128,5 @@ inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February",
 // Get the month day for the n_-th [ 1, 5 ] day_week w_.
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
+
+void print_calendar ( int const y_, int const m_ ) noexcept;

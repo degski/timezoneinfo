@@ -45,9 +45,41 @@
 #include <type_traits>
 #include <vector>
 
+void print_calendar_ ( int const y_, int const m_ ) noexcept {
+    std::cout << std::string ( ( 20 - std::strlen ( month_of_the_year[ m_ - 1 ] ) ) / 2, ' ' ) << month_of_the_year[ m_ - 1 ] << ' '
+              << y_ << nl;
+    int first = day_week ( y_, m_, 1 ), c = 0, l = days_month ( y_, m_ ), w = year_weeks ( y_, m_, 1 );
+    std::cout << "  # Su Mo Tu We Th Fr Sa" << nl;
+    // first line.
+    std::cout << fmt::format ( "{:3}", w++ ) << std::string ( 3 * first, ' ' );
+    for ( ; first < 7; ++first )
+        std::cout << fmt::format ( "{:3}", ++c );
+    std::cout << nl;
+    // middle lines.
+    while ( c <= ( l - 7 ) ) {
+        std::cout << fmt::format ( "{:3}", w++ );
+        for ( int i = 0; i < 7; ++i )
+            std::cout << fmt::format ( "{:3}", ++c );
+        std::cout << nl;
+    }
+    // last line (iff applicable).
+    if ( c < l ) {
+        std::cout << fmt::format ( "{:3}", w );
+        do {
+            std::cout << fmt::format ( "{:3}", ++c );
+        } while ( c < l );
+        std::cout << nl;
+    }
+}
+
 int main ( ) {
 
     init_alt ( );
+
+    for ( int i = 1; i < 13; ++i ) {
+        print_calendar_ ( 2020, i );
+        std::cout << nl;
+    }
 
     /*
 
@@ -56,7 +88,7 @@ int main ( ) {
     for ( auto const & e : g_iana )
         std::cout << e.first << " - " << e.second.name << " - " << e.second.code << nl;
 
-    */
+
 
     tzi_t tzi1 = get_tzi ( "Australia/Perth" );
 
@@ -79,6 +111,8 @@ int main ( ) {
     std::cout << t1 << nl;
 
     std::cout << t1.get_offset ( ) << nl;
+
+    */
 
     return EXIT_SUCCESS;
 }

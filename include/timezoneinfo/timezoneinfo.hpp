@@ -26,7 +26,10 @@
 #include "calendar.hpp"
 #include "ianamap.hpp"
 
-#define FMT_USE_GRISU 1
+#ifndef FMT_USE_GRISU
+#    define FMT_USE_GRISU 1
+#endif
+
 #include <fmt/chrono.h>
 #include <fmt/compile.h>
 #include <fmt/core.h>
