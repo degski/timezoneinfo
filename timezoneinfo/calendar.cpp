@@ -253,10 +253,7 @@ int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept { ret
     std::string s;
     s.reserve ( 192 );
     s.append ( ( 20 - std::strlen ( month_of_the_year[ m_ - 1 ] ) ) / 2, ' ' );
-    s.append ( month_of_the_year[ m_ - 1 ] );
-    s.push_back ( ' ' );
-    s.append ( fmt::format ( "{}", y_ ) );
-    s.append ( "\n  # Su Mo Tu We Th Fr Sa\n" );
+    s.append ( fmt::format ( "{} {}\n  # Su Mo Tu We Th Fr Sa\n", month_of_the_year[ m_ - 1 ], y_ ) );
     int w = year_weeks ( y_, m_, 1 ), f = day_week ( y_, m_, 1 );
     // first line.
     s.append ( fmt::format ( "{:3}", w++ ) );

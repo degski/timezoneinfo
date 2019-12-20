@@ -131,17 +131,14 @@ inline constexpr char const * month_of_the_year[ 12 ] = { "January", "February",
 [[nodiscard]] int weekday_day ( int const n_, int const y_, int const m_, int const w_ ) noexcept;
 [[nodiscard]] int last_weekday_day ( int const y_, int const m_, int const w_ ) noexcept;
 
-/*
- Returns calendar formatted as a string.
-
-      December 2019
-  # Su Mo Tu We Th Fr Sa
- 49  1  2  3  4  5  6  7
- 50  8  9 10 11 12 13 14
- 51 15 16 17 18 19 20 21
- 52 22 23 24 25 26 27 28
- 53 29 30 31
-
- */
+// Returns calendar month formatted as a string, f.e.:
+//
+//      December 2019
+//  # Su Mo Tu We Th Fr Sa
+// 49  1  2  3  4  5  6  7
+// 50  8  9 10 11 12 13 14
+// 51 15 16 17 18 19 20 21
+// 52 22 23 24 25 26 27 28
+// 53 29 30 31
 
 [[nodiscard]] std::string calendar ( int const y_, int const m_ ) noexcept;
