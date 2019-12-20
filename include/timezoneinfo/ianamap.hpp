@@ -28,7 +28,7 @@
 #    pragma comment( lib, "Crypt32.lib" )
 #    pragma comment( lib, "winmm.lib" )
 #    pragma comment( lib, "wldap32.lib" )
-#    if not defined( NDEBUG )
+#    ifndef NDEBUG
 #        pragma comment( lib, "zlibd.lib" )
 #        pragma comment( lib, "libcurl-d.lib" )
 #        pragma comment( lib, "tinyxml2d.lib" )

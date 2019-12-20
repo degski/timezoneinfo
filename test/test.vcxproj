@@ -50,7 +50,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>llvm</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -93,7 +93,7 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="LLVM" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClangClAdditionalOptions>-m64 -fmsc-version=1922 -fno-delayed-template-parsing -march=native -mmmx -msse -msse2 -msse3 -msse4.1 -msse4.2 -maes -mavx -mavx2 -mbmi -mbmi2 -mpopcnt -mf16c -mxsaveopt -mlzcnt -mfma -mpclmul -mxsave -mrdrnd -mfxsr -madx -Xclang -fforce-enable-int128 -Xclang -faligned-allocation -Xclang -pedantic -Xclang -ffast-math -Xclang -fcolor-diagnostics -Xclang -fcoroutines-ts -Xclang -ffine-grained-bitfield-accesses -Xclang -ffixed-point -Xclang -fmodules -Xclang -fmodules-ts -Xclang -fsized-deallocation -Qunused-arguments -Wno-unused-function -Wno-unused-variable -Wno-language-extension-token -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-ignored-pragmas -Wno-unused-private-field -Wno-unused-command-line-argument -Wno-gnu-anonymous-struct -Wno-nested-anon-types</ClangClAdditionalOptions>
+    <ClangClAdditionalOptions>-m64 -fmsc-version=1923 -fno-delayed-template-parsing -march=native -mmmx -msse -msse2 -msse3 -msse4.1 -msse4.2 -maes -mavx -mavx2 -mbmi -mbmi2 -mpopcnt -mf16c -mxsaveopt -mlzcnt -mfma -mpclmul -mxsave -mrdrnd -mfxsr -madx -Xclang -fforce-enable-int128 -Xclang -faligned-allocation -Xclang -pedantic -Xclang -ffast-math -Xclang -fcolor-diagnostics -Xclang -fcoroutines-ts -Xclang -ffine-grained-bitfield-accesses -Xclang -ffixed-point -Xclang -fmodules -Xclang -fmodules-ts -Xclang -fsized-deallocation -Qunused-arguments -Wno-unused-function -Wno-unused-variable -Wno-language-extension-token -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-ignored-pragmas -Wno-unused-private-field -Wno-unused-command-line-argument -Wno-gnu-anonymous-struct -Wno-nested-anon-types</ClangClAdditionalOptions>
     <LldLinkAdditionalOptions>--color-diagnostics</LldLinkAdditionalOptions>
     <UseLldLink>true</UseLldLink>
   </PropertyGroup>
@@ -103,7 +103,7 @@
     <UseLldLink>true</UseLldLink>
   </PropertyGroup>
   <PropertyGroup Label="LLVM" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClangClAdditionalOptions>-m32 -fmsc-version=1922 -fno-delayed-template-parsing -march=native -mmmx -msse -msse2 -msse3 -msse4.1 -msse4.2 -maes -mavx -mavx2 -mbmi -mbmi2 -mpopcnt -mf16c -mxsaveopt -mlzcnt -mfma -mpclmul -mxsave -mrdrnd -mfxsr -madx -Xclang -faligned-allocation -Xclang -pedantic -Xclang -ffast-math -Xclang -fcolor-diagnostics -Xclang -fcoroutines-ts -Xclang -ffine-grained-bitfield-accesses -Xclang -ffixed-point -Xclang -fmodules -Xclang -fmodules-ts -Xclang -fsized-deallocation -Qunused-arguments -Wno-unused-function -Wno-unused-variable -Wno-language-extension-token -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-ignored-pragmas -Wno-unused-private-field -Wno-unused-command-line-argument -Wno-gnu-anonymous-struct -Wno-nested-anon-types</ClangClAdditionalOptions>
+    <ClangClAdditionalOptions>-m32 -fmsc-version=1923 -fno-delayed-template-parsing -march=native -mmmx -msse -msse2 -msse3 -msse4.1 -msse4.2 -maes -mavx -mavx2 -mbmi -mbmi2 -mpopcnt -mf16c -mxsaveopt -mlzcnt -mfma -mpclmul -mxsave -mrdrnd -mfxsr -madx -Xclang -faligned-allocation -Xclang -pedantic -Xclang -ffast-math -Xclang -fcolor-diagnostics -Xclang -fcoroutines-ts -Xclang -ffine-grained-bitfield-accesses -Xclang -ffixed-point -Xclang -fmodules -Xclang -fmodules-ts -Xclang -fsized-deallocation -Qunused-arguments -Wno-unused-function -Wno-unused-variable -Wno-language-extension-token -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-ignored-pragmas -Wno-unused-private-field -Wno-unused-command-line-argument -Wno-gnu-anonymous-struct -Wno-nested-anon-types</ClangClAdditionalOptions>
     <LldLinkAdditionalOptions>--color-diagnostics</LldLinkAdditionalOptions>
   </PropertyGroup>
   <PropertyGroup Label="LLVM" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
