@@ -47,14 +47,63 @@
 
 void print_calendar ( int const y_, int const m_ ) noexcept { std::cout << calendar ( y_, m_ ); }
 
+struct Week {
+
+    int week_num;
+    int days[ 7 ]{ };
+};
+
+struct Month {
+
+    int year, month;
+    char name[ 16 ]{ };
+    std::vector<Week> weeks;
+
+    Month ( ) { weeks.reserve ( 6 ); }
+};
+
+[[nodiscard]] Month calendar_ ( int const y_, int const m_ ) noexcept {
+    Month m;
+    m.year  = y_;
+    m.month = m_;
+    std::memcpy ( m.name, month_of_the_year[ m_ - 1 ], std::strlen ( month_of_the_year[ m_ - 1 ] ) );
+    int w = year_weeks ( y_, m_, 1 ), f = day_week ( y_, m_, 1 );
+    // first line.
+    m.weeks.emplace_back ( );
+    m.weeks.back ( ).week_num = w++;
+    int c                     = 1;
+    for ( ; f < 7; ++f )
+        m.weeks.back ( ).days[ f ] = c++;
+    // middle lines.
+    int const l = days_month ( y_, m_ );
+    while ( c <= ( l - 7 ) ) {
+        m.weeks.emplace_back ( );
+        m.weeks.back ( ).week_num = w++;
+        for ( int i = 0; i < 7; ++i, ++c )
+            m.weeks.back ( ).days[ i ] = c;
+    }
+    // last line (iff applicable).
+    if ( c <= l ) {
+        m.weeks.emplace_back ( );
+        m.weeks.back ( ).week_num = w++;
+        int i                     = 0;
+        do {
+            m.weeks.back ( ).days[ i++ ] = c++;
+        } while ( c <= l );
+    }
+    return m;
+}
+
 int main ( ) {
 
     init_alt ( );
 
-    for ( int i = 1; i < 13; ++i ) {
-        print_calendar ( 2019, i );
-        std::cout << nl;
-    }
+    Month m = calendar_ ( 2020, 5 );
+
+    std::cout << m.name << nl;
+    std::cout << m.year << ' ' << m.month << nl;
+    std::cout << m.weeks.size ( ) << nl;
+    std::cout << m.weeks[ 0 ].week_num << nl;
 
     /*
 
