@@ -72,23 +72,20 @@ struct Month {
     std::memcpy ( m.name, month_of_the_year[ m_ - 1 ], std::strlen ( month_of_the_year[ m_ - 1 ] ) );
     int w = year_weeks ( y_, m_, 1 ), f = day_week ( y_, m_, 1 );
     // first line.
-    m.weeks.emplace_back ( w++ );
-    int c = 1;
+    int *dp = m.weeks.emplace_back ( w++ ).days, c = 1;
     while ( f < 7 )
-        m.weeks.back ( ).days[ f++ ] = c++;
+        dp[ f++ ] = c++;
     // middle lines.
     int const l = days_month ( y_, m_ );
     while ( c <= ( l - 7 ) ) {
-        m.weeks.emplace_back ( w++ );
-        int * dp = m.weeks.back ( ).days;
-        f        = 0;
+        dp = m.weeks.emplace_back ( w++ ).days;
+        f  = 0;
         while ( f < 7 )
             dp[ f++ ] = c++;
     }
     // last line (iff applicable).
     if ( c <= l ) {
-        m.weeks.emplace_back ( w );
-        int * dp = m.weeks.back ( ).days;
+        dp = m.weeks.emplace_back ( w ).days;
         do
             *dp++ = c++;
         while ( c <= l );
