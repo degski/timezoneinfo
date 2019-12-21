@@ -51,6 +51,9 @@ struct Week {
 
     int week_num;
     int days[ 7 ]{ };
+
+    Week ( ) noexcept {}
+    Week ( int w_ ) noexcept : week_num{ w_ } {}
 };
 
 struct Month {
@@ -69,27 +72,26 @@ struct Month {
     std::memcpy ( m.name, month_of_the_year[ m_ - 1 ], std::strlen ( month_of_the_year[ m_ - 1 ] ) );
     int w = year_weeks ( y_, m_, 1 ), f = day_week ( y_, m_, 1 );
     // first line.
-    m.weeks.emplace_back ( );
-    m.weeks.back ( ).week_num = w++;
-    int c                     = 1;
-    for ( ; f < 7; ++f )
-        m.weeks.back ( ).days[ f ] = c++;
+    m.weeks.emplace_back ( w++ );
+    int c = 1;
+    while ( f < 7 )
+        m.weeks.back ( ).days[ f++ ] = c++;
     // middle lines.
     int const l = days_month ( y_, m_ );
     while ( c <= ( l - 7 ) ) {
-        m.weeks.emplace_back ( );
-        m.weeks.back ( ).week_num = w++;
-        for ( int i = 0; i < 7; ++i, ++c )
-            m.weeks.back ( ).days[ i ] = c;
+        m.weeks.emplace_back ( w++ );
+        int * dp = &m.weeks.back ( ).days[ 0 ];
+        f        = 0;
+        while ( f < 7 )
+            dp[ f++ ] = c++;
     }
     // last line (iff applicable).
     if ( c <= l ) {
-        m.weeks.emplace_back ( );
-        m.weeks.back ( ).week_num = w++;
-        int i                     = 0;
-        do {
-            m.weeks.back ( ).days[ i++ ] = c++;
-        } while ( c <= l );
+        m.weeks.emplace_back ( w );
+        int * dp = &m.weeks.back ( ).days[ 0 ];
+        do
+            *dp++ = c++;
+        while ( c <= l );
     }
     return m;
 }
