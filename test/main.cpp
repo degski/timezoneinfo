@@ -80,7 +80,7 @@ struct Month {
     int const l = days_month ( y_, m_ );
     while ( c <= ( l - 7 ) ) {
         m.weeks.emplace_back ( w++ );
-        int * dp = &m.weeks.back ( ).days[ 0 ];
+        int * dp = m.weeks.back ( ).days;
         f        = 0;
         while ( f < 7 )
             dp[ f++ ] = c++;
@@ -88,7 +88,7 @@ struct Month {
     // last line (iff applicable).
     if ( c <= l ) {
         m.weeks.emplace_back ( w );
-        int * dp = &m.weeks.back ( ).days[ 0 ];
+        int * dp = m.weeks.back ( ).days;
         do
             *dp++ = c++;
         while ( c <= l );
